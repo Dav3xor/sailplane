@@ -1,5 +1,5 @@
 import math
-
+import shapely
 
 
 def get_intersections(p1, r1, p2, r2):
@@ -99,7 +99,7 @@ def rotate(point, angle):
     return (point[0]*math.cos(angle) - point[1]*math.sin(angle),
             point[0]*math.sin(angle) + point[1]*math.cos(angle))
 
-print('<svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">')
+print('<svg width="200in" height="200in" viewBox="0 0 200 200" viewboxxmlns="http://www.w3.org/2000/svg">')
 
 
 def make_ellipse(e, numsteps = 100, flip=False):
@@ -113,14 +113,69 @@ def make_ellipse(e, numsteps = 100, flip=False):
                         e['datum']))
     return points
 
-def ellipses(ellipses):
+def ellipses(ellipses, hoffset=0):
     for e in ellipses:
         e['points'] = make_ellipse(e)
     voffset = 0
+    results = []
     for i in range(len(ellipses)-1):
-        voffset = build_flat_shape(ellipses[i]['points'],
-                                    ellipses[i+1]['points'], 
-                                    voffset)
+        voffset,a,b = build_flat_shape(ellipses[i]['points'],
+                                       ellipses[i+1]['points'], 
+                                       voffset, hoffset)
+        voffset-=2
+        results.append((a,b))        
+    
+    return results
+
+def connecting_strip(centerline, edges, width, skip):
+    a = []
+    b = []
+    
+    a.append(centerline[0])
+    
+    for i in range(1, len(centerline)-1):
+        p1 = centerline[i]
+        p2 = centerline[i+1]
+        angle = math.atan2(p1[0]-p2[0], p1[1]-p2[1])
+        if i % skip:
+            a.append((p1[0]+width*math.sin(angle+(math.pi/2)),
+                      p1[1]+width*math.cos(angle+(math.pi/2))))
+        else:
+            a.append((p1[0]+(width/10)*math.sin(angle-(math.pi/2)),
+                      p1[1]+(width/10)*math.cos(angle-(math.pi/2))))
+        b.append((p1[0]+width*math.sin(angle-(math.pi/2)),
+                  p1[1]+width*math.cos(angle-(math.pi/2))))
+    a.append(centerline[-1])
+    b.reverse()
+    poly = shapely.Polygon(a+b)
+    #poly = poly.buffer(.05, cap_style=3).buffer(-.05, join_style=1)
+    #poly = poly.buffer(-0.1).buffer(.2).buffer(-0.1)
+    poly = poly.buffer(-.1)
+    poly2 = '' 
+    for point in list(zip(*poly.exterior.coords.xy)):
+        poly2 += f'{point[0]},{point[1]} \n'
+    print (f'<polygon stroke-width="0.1" fill="none" stroke="black" points="{poly2}" />')
+    for edge in edges:
+        points = []
+        poly = ''
+        angle = math.atan2(edge[0][0]-edge[1][0], edge[0][1]-edge[1][1])
+        points.append((edge[0][0]+width*math.sin(angle+(math.pi/2)),
+                  edge[0][1]+width*math.cos(angle+(math.pi/2))))
+        points.append((edge[0][0]+width*math.sin(angle-(math.pi/2)),
+                  edge[0][1]+width*math.cos(angle-(math.pi/2))))
+        points.append((edge[1][0]+width*math.sin(angle-(math.pi/2)),
+                  edge[1][1]+width*math.cos(angle-(math.pi/2))))
+        points.append((edge[1][0]+width*math.sin(angle+(math.pi/2)),
+                  edge[1][1]+width*math.cos(angle+(math.pi/2))))
+        for point in points:
+            poly += f'{point[0]},{point[1]} \n'
+        print (f'<polygon stroke-width="0.1" fill="none" stroke="black" points="{poly}" />')
+        
+
+
+    return a+b
+        
+
 
 
 def expand_airfoil(airfoil,chord,datum, sweep):
@@ -140,24 +195,58 @@ def points_to_poly(points):
     return f'<polygon stroke-width="0.1" fill="none" stroke="black" points="{poly}" />'
 
 def wing_skin(airfoil1, chord1, airfoil2, chord2, span, sweep):
-    build_flat_shape(expand_airfoil(airfoil1, chord1, 0, 0),
-                     expand_airfoil(airfoil2, chord2, span, sweep))
+    af1_shape = expand_airfoil(airfoil1, chord1, 0, 0)
+    af2_shape = expand_airfoil(airfoil2, chord2, span, sweep)
+   
+    print(points_to_poly(af1_shape))
+    print(points_to_poly(af2_shape))
+    a,b,c = build_flat_shape(af1_shape, af2_shape)
+    connecting_strip(c,[],.75,3)
+    # I used this to determine which parts of the 
+    #print(af1_shape[50:90])
+    return (af1_shape, af2_shape,a)
 
 def wing_rib(airfoil, chord):
     print(points_to_poly(expand_airfoil(airfoil,chord,0,0)))
 
+def flat_triangle(pa,pb,d1,d2,side='left'):
+    poly = ''
+    poly += f'{pa[0]},{pa[1]} \n'
+    poly += f'{pb[0]},{pb[1]} \n'
+    pc = find_pointl(pa,pb,d1,d2) if side == 'left' else find_pointr(pa,pb,d1,d2)
+    poly += f'{pc[0]},{pc[1]} \n'
+    return f'<polygon stroke-width="0.1" fill="none" stroke="black" points="{poly}" />'
 
-def build_flat_shape(a,b, voffset=0):
-    print(a)
-    print(b)
+def build_flat_fan(pivot, fan):
+    flattened = []
+    
+    height = distance(pivot,fan[0])
+    flattened.append((0, height))
+    print(height)
+    print(flattened)
+    for step in range(1,len(fan)):
+        d     = distance(fan[step],fan[step-1])
+        slant = distance(pivot,fan[step])
+        print(f"---\n{flattened}")
+        print(f'd={d} slant={slant} step={step} base = {distance((0,0),flattened[-1])}')
+        # -- flatspace
+
+        newp = find_pointl((0,0), flattened[-1],slant,d)
+        flattened.append(newp)
+    flattened.append((0,0))
+    print(points_to_poly(flattened))
+    
+def build_flat_shape(a,b, voffset=0, hoffset=0):
+    #print(a)
+    #print(b)
     flattened_a  = []
     flattened_b  = []
    
     
     height = distance(a[0],b[0])
     
-    flattened_a.append((0,voffset))
-    flattened_b.append((0,(height*-1.0)+voffset))
+    flattened_a.append((0+hoffset,voffset))
+    flattened_b.append((0+hoffset,(height*-1.0)+voffset))
 
 
 
@@ -185,7 +274,8 @@ def build_flat_shape(a,b, voffset=0):
     flattened_b.reverse()
 
     print(points_to_poly(flattened_a+flattened_b))
-
-    return (height*-1.0)+voffset
+    
+    return ((height*-1.0)+voffset, flattened_a, flattened_b)
+    #return (height*-1.0)+voffset
 
 
