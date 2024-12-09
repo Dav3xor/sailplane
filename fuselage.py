@@ -162,20 +162,51 @@ wing_skin(airfoil2, chord_a, airfoil3, chord_b, 52,offset_b)
 wing_skin(airfoil3, chord_b, airfoil3, chord_c, 90,offset_c)
 wing_skin(airfoil3, chord_c, airfoil3, chord_d, 90,offset_d)
 
-vtail_curve = wing_skin(airfoil4, 42.65, airfoil4, 17.625, 28, 18.5)[0][50:90]
-vtail_curve.insert(0,(21.81,2.2,0))
-for i in range(len(vtail_curve)):
-    vtail_curve[i] = (vtail_curve[i][0]+217.5, 22, vtail_curve[i][1])
-vtail_curve.insert(0,(236.01,42,2.75))
-print(vtail_curve)
-build_flat_fan((213,42,4.6),vtail_curve)
+#vtail_curve = wing_skin(airfoil4, 42.65, airfoil4, 17.625, 28, 18.5)[0][50:90]
+vtail_base,vtail_top,vtail_skin = wing_skin(airfoil4, 42.65, airfoil4, 17.625, 28, 18.5)
+vstab_lower_curve  = vtail_base[47:90]
+vstab_middle_curve = vtail_base[50:-50]
+vstab_upper_curve  = vtail_top[50:-50]
 
+# translate
+for i in range(len(vstab_lower_curve)):
+    vstab_lower_curve[i] = (vstab_lower_curve[i][0]+217.5, 22, vstab_lower_curve[i][1])
+
+for i in range(len(vstab_middle_curve)):
+    vstab_middle_curve[i] = (vstab_middle_curve[i][0]+217.5, 22, vstab_middle_curve[i][1])
+
+for i in range(len(vstab_upper_curve)):
+    vstab_upper_curve[i] = (vstab_upper_curve[i][0]+217.5, -6, vstab_upper_curve[i][1])
+
+vstab_lower_curve.insert(0,(241.24,22,2.06)) # aft top
+#vstab_lower_curve.insert(0,(236.01,42,2.75)) # aft bottom
+
+
+vstab_lower_curve.insert(0,(238.61,42,2.37))
+
+vstab_middle_curve.insert(0,(241.24, 22,  2.06))
+vstab_middle_curve.append(  (241.24, 22, -2.06))
+
+vstab_upper_curve.insert(0,(244.93,-6,.91))
+vstab_upper_curve.append(  (244.93,-6,-.91))
+print('---')
+print(vstab_lower_curve)
+print('---')
+print (vstab_middle_curve)
+print('---')
+print (vstab_upper_curve)
+print(len(vstab_middle_curve))
+print(len(vstab_upper_curve))
+#5/0
+
+build_flat_fan((213,42,4.6),vstab_lower_curve)
+build_flat_shape(vstab_middle_curve,vstab_upper_curve)
 
 
 # horizontal tail
 a = 25*.3
 b = 18*.3
-wing_skin(airfoil4, 25, airfoil4, 18, 62, a-b)
+#wing_skin(airfoil4, 25, airfoil4, 18, 62, a-b)
 
 
 
