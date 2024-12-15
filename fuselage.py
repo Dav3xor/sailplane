@@ -169,14 +169,17 @@ vstab_middle_curve = vtail_base[50:-50]
 vstab_upper_curve  = vtail_top[50:-50]
 
 # translate
-for i in range(len(vstab_lower_curve)):
-    vstab_lower_curve[i] = (vstab_lower_curve[i][0]+217.5, 22, vstab_lower_curve[i][1])
+def transform_tail(coords, transx, y):
+    for i in range(len(coords)):
+        coords[i] = (coords[i][0]+transx, y, coords[i][1])
+    return coords
 
-for i in range(len(vstab_middle_curve)):
-    vstab_middle_curve[i] = (vstab_middle_curve[i][0]+217.5, 22, vstab_middle_curve[i][1])
+def flip_z(coords):
+    return [(i[0],i[1],i[2]*-1.0) for i in reversed(coords)]
 
-for i in range(len(vstab_upper_curve)):
-    vstab_upper_curve[i] = (vstab_upper_curve[i][0]+217.5, -6, vstab_upper_curve[i][1])
+transform_tail(vstab_lower_curve, 217.5, 22)
+transform_tail(vstab_middle_curve, 217.5, 22)
+transform_tail(vstab_upper_curve, 217.5, -6)
 
 vstab_lower_curve.insert(0,(241.24,22,2.06)) # aft top
 #vstab_lower_curve.insert(0,(236.01,42,2.75)) # aft bottom
@@ -189,19 +192,69 @@ vstab_middle_curve.append(  (241.24, 22, -2.06))
 
 vstab_upper_curve.insert(0,(244.93,-6,.91))
 vstab_upper_curve.append(  (244.93,-6,-.91))
-print('---')
-print(vstab_lower_curve)
-print('---')
-print (vstab_middle_curve)
-print('---')
-print (vstab_upper_curve)
-print(len(vstab_middle_curve))
-print(len(vstab_upper_curve))
-#5/0
 
+# lower vertical stabilizer
 build_flat_fan((213,42,4.6),vstab_lower_curve)
+# upper vertical stabilizer
 build_flat_shape(vstab_middle_curve,vstab_upper_curve)
 
+# rudder
+rudder_lower_end = [(254.57,42,0)]
+rudder_bottom_end = [(251.91,44,0)]
+rudder_front_bottom = make_ellipse({'width':             2.163,
+                                    'height':            2.163,
+                                    'datum':             239.0,
+                                    'horizontal_center': 0,
+                                    'vertical_center':   44,
+                                    'amount':            0.5},
+                                    numsteps=100, mode=2, flip=2)
+rudder_front_lower  = make_ellipse({'width':             2.251,
+                                     'height':            2.251,
+                                     'datum':             239.26,
+                                     'horizontal_center': 0,
+                                     'vertical_center':   42,
+                                     'amount':            0.5},
+                                     numsteps=100, mode=2, flip=2)
+rudder_front_middle  = make_ellipse({'width':             2.012,
+                                     'height':            2.012,
+                                     'datum':             241.8,
+                                     'horizontal_center': 0,
+                                     'vertical_center':   22,
+                                     'amount':            0.5},
+                                     numsteps=100, mode=2, flip=2)
+rudder_front_upper   = make_ellipse({'width':             .881,
+                                     'height':            .881,
+                                     'datum':             244.93,
+                                     'horizontal_center': 0,
+                                     'vertical_center':   -6,
+                                     'amount':            0.5},
+                                     numsteps=100, mode=2, flip=2)
+
+rudder_middle_curve  = vtail_base[0:46]
+rudder_upper_curve   = vtail_top[0:46]
+transform_tail(rudder_middle_curve,217.5,22)
+transform_tail(rudder_upper_curve,217.5,-6)
+
+rudder_middle = rudder_middle_curve + rudder_front_middle + flip_z(rudder_middle_curve)
+rudder_upper = rudder_upper_curve + rudder_front_upper + flip_z(rudder_upper_curve)
+
+print(points_to_poly(rudder_middle,xindex=0,yindex=2))
+print(points_to_poly(rudder_upper,xindex=0,yindex=2))
+
+# rudder top
+build_flat_shape(rudder_middle,rudder_upper)
+
+# rudder middle
+a=build_flat_fan((239.26,42,2.28),rudder_lower_end+rudder_middle_curve+[(241.8,22,2.02)])
+b=build_flat_shape(rudder_front_lower, rudder_front_middle, start=a)
+c=build_flat_fan((239.26,42,2.28),rudder_lower_end+rudder_middle_curve+[(241.8,22,2.02)],start_pivot=b[1][-1],start_point=b[2][0],reverse=True)
+
+print(points_to_poly(rudder_lower_end+rudder_front_lower+rudder_lower_end,xindex=0,yindex=2))
+print(points_to_poly(rudder_bottom_end+rudder_front_bottom+rudder_bottom_end,xindex=0,yindex=2))
+
+# rudder lower
+build_flat_shape(rudder_lower_end+rudder_front_lower+rudder_lower_end,
+                 rudder_bottom_end+rudder_front_bottom+rudder_bottom_end)
 
 # horizontal tail
 a = 25*.3
@@ -218,7 +271,7 @@ for station in fuselage:
    
     if station['upper']['height']:
         upper = make_ellipse(station['upper'], flip=True)
-        upper = [(i[0],i[1]) for i in upper]
+        upper = [(i[2],i[1]) for i in upper]
         for j in upper:
             points += '{},{} \n'.format(j[0],j[1])
         connecting_strip(upper,[],flange_width, 4)
@@ -230,7 +283,7 @@ for station in fuselage:
 
     if station['lower']['height']:
         lower = make_ellipse(station['lower'])
-        lower = [(i[0],i[1]) for i in lower]
+        lower = [(i[2],i[1]) for i in lower]
         lower.reverse()
         for j in lower:
             points += '{},{} \n'.format(j[0],j[1])

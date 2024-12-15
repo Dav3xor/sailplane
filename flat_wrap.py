@@ -102,15 +102,24 @@ def rotate(point, angle):
 print('<svg width="200in" height="200in" viewBox="0 0 200 200" viewboxxmlns="http://www.w3.org/2000/svg">')
 
 
-def make_ellipse(e, numsteps = 100, flip=False):
+def make_ellipse(e, numsteps = 100, flip=False, mode=1):
     points = []
     flip = -1.0 if flip else 1.0
     for step in range(numsteps):
         step_angle = (2*3.14159*e['amount'])/(numsteps-1)
         angle = step * step_angle
-        points.append(( (math.cos(angle)*e['width'])+e['horizontal_center'], 
-                        (math.sin(angle)*e['height']*flip)+e['vertical_center'],
-                        e['datum']))
+        #points.append(( (math.cos(angle)*e['width'])+e['horizontal_center'], 
+        #                (math.sin(angle)*e['height']*flip)+e['vertical_center'],
+        #                e['datum']))
+        if mode == 1:
+            points.append(( e['datum'],
+                            (math.sin(angle)*e['height']*flip)+e['vertical_center'],
+                            (math.cos(angle)*e['width'])+e['horizontal_center']))
+        if mode == 2:
+            points.append(( (math.sin(angle)*e['height']*flip) + e['datum'],
+                            e['vertical_center'],
+                            (math.cos(angle)*e['width']) + e['horizontal_center']))
+
     return points
 
 def ellipses(ellipses, hoffset=0):
@@ -187,10 +196,10 @@ def expand_airfoil(airfoil,chord,datum, sweep):
     return points
 
 
-def points_to_poly(points):
+def points_to_poly(points,xindex=0,yindex=1):
     poly = ''
     for point in points:
-        poly += f'{point[0]},{point[1]} \n'
+        poly += f'{point[xindex]},{point[yindex]} \n'
 
     return f'<polygon stroke-width="0.1" fill="none" stroke="black" points="{poly}" />'
 
@@ -217,13 +226,15 @@ def flat_triangle(pa,pb,d1,d2,side='left'):
     poly += f'{pc[0]},{pc[1]} \n'
     return f'<polygon stroke-width="0.1" fill="none" stroke="black" points="{poly}" />'
 
-def build_flat_fan(pivot, fan):
+def build_flat_fan(pivot, fan, start_pivot=(0,0), start_point=None, reverse=False):
     flattened = []
-    
-    height = distance(pivot,fan[0])
-    flattened.append((0, height))
-    print(height)
-    print(flattened)
+    if reverse:
+        fan.reverse()
+    if not start_point:
+        height = distance(pivot,fan[0])
+        flattened.append((0, height))
+    else:
+        flattened.append(start_point)
     for step in range(1,len(fan)):
         d     = distance(fan[step],fan[step-1])
         slant = distance(pivot,fan[step])
@@ -231,22 +242,27 @@ def build_flat_fan(pivot, fan):
         print(f'd={d} slant={slant} step={step} base = {distance((0,0),flattened[-1])}')
         # -- flatspace
 
-        newp = find_pointl((0,0), flattened[-1],slant,d)
+        newp = find_pointl(start_pivot, flattened[-1],slant,d)
         flattened.append(newp)
-    flattened.append((0,0))
+    flattened.append(start_pivot)
     print(points_to_poly(flattened))
+    return flattened
     
-def build_flat_shape(a,b, voffset=0, hoffset=0):
+def build_flat_shape(a,b, voffset=0, hoffset=0, start=None):
     #print(a)
     #print(b)
     flattened_a  = []
     flattened_b  = []
    
-    
     height = distance(a[0],b[0])
-    
-    flattened_a.append((0+hoffset,voffset))
-    flattened_b.append((0+hoffset,(height*-1.0)+voffset))
+   
+    if start:
+        flattened_a.append(start[-1])
+        flattened_b.append(start[-2])
+    else:
+        
+        flattened_a.append((0+hoffset,voffset))
+        flattened_b.append((0+hoffset,(height*-1.0)+voffset))
 
 
 
