@@ -7,7 +7,6 @@ stations     = [12.0,   17.0,  22.5,  28.0,  35.0,   43.0,   48.0,  58.0,   68.0
 widths       = [ 6.03,  7.69,   8.93,  9.86, 10.75,  11.50,  11.86, 12.375, 12.67,  12.85,   12.85,  12.85,   12.56,   11.625,  9.125,  4.61,    2.75,  2.75 ,   2.75]
 
 upper_top    = [42.75, 39.375, None,  None,  None,   None,   None,  None,   None,   None,    27.00,  28.04,   29.31,   30.34,  30.91,   32.0,    None,  None,  32.53]
-#upper_top    = [42.75, 39.375, None,  None,  None,   None,   None,  None,   None,   None,    27.00,  28.04,   29.31,   30.34,  30.91,   32.0,    None,  None,  31.00]
 upper_bottom = [48,    47.375, 46.69, 46.0,  45.125, 44.125, 43.5,  42.25,  41.0,   39.625,  39.0,   39.375,  40.375,  41.625, 42.0,    42.0,    None, 42.0,   34.0]
                                                                                           
 belly_top    = [48,    49.68,  51.12, 52.30, 53.48,  54.46,  54.88, 55.34,  55.03,  53.44,   None,   51.06,   48.52,   45.53,   44.0,   44.0,    None,  None,  None]
@@ -55,7 +54,7 @@ for i in range(len(stations)):
 
 # fuselage top & bottom
 lowers = ellipses([i['lower'] for i in fuselage if i['lower']['height']])
-uppers = ellipses([i['upper'] for i in fuselage if i['upper']['height']], 90)
+uppers = ellipses([i['upper'] for i in fuselage if i['upper']['height']], 50)
 
 # tail triangle
 da = distance((stations[15],upper_bottom[15],widths[15]),
@@ -90,7 +89,7 @@ bt2 = belly_top[:10] + belly_top[11:]
 st2 = stations[:10] + stations[11:]
 wd2 = widths[:10] + widths[11:]
 
-old_width = 0
+old_width = 0.0
 for i in range(len(ub2)-1):
     points = ''
     width = distance((st2[i], wd2[i]), 
@@ -100,16 +99,13 @@ for i in range(len(ub2)-1):
     c = (ub2[i+1], old_width+width, wd2[i+1])
     d = (bt2[i+1], old_width+width, wd2[i+1])
 
-    #points += '{},{} \n'.format(a[0],a[1])
-    #points += '{},{} \n'.format(b[0],b[1])
-    #points += '{},{} \n'.format(d[0],b[1]-width)
-    #points += '{},{} \n'.format(c[0],a[1]-width)
 
     # full projected sides
-    points = [a,b,
-              (d[0],b[1]+width),
-              (c[0],a[1]+width)]
-    print(points_to_poly(points))
+    if c[0] and d[0]:
+        points = [a,b,
+                  (d[0],b[1]+width),
+                  (c[0],a[1]+width)]
+        print(points_to_poly(points,tx=-66,ty=-230))
 
 
 
@@ -119,7 +115,7 @@ for i in range(len(ub2)-1):
     points = [a, (b[0]-flange_width,b[1]),
               (d[0]-flange_width,b[1]+width),
               (c[0],a[1]+width)]
-    print(points_to_poly(points))
+    print(points_to_poly(points,tx=-66,ty=-230))
 
 
     # connecting strip...
@@ -129,7 +125,7 @@ for i in range(len(ub2)-1):
 
                   (d[0],a[1]+width),
                   (d[0]-flange_width*2,a[1]+width)]
-        print(points_to_poly(points))
+        print(points_to_poly(points,tx=-66,ty=-230))
     old_width += width
 
 
@@ -144,23 +140,39 @@ airfoil4 = load_airfoil('NACA-0012.dat')
 #airfoil2 = load_airfoil('GA40-A610.dat')
 
 # the wing
-root_chord = 48
-chord_a    = 382.5-338.8
-chord_b    = 380.3-342.9
-chord_c    = 376.65-349.9
-chord_d    = 372.92-356.93
-offset_a   = (root_chord*.4)-(chord_a*.4)
-offset_b   = (chord_a*.4)-(chord_b*.4)
-offset_c   = (chord_b*.4)-(chord_c*.4)
-offset_d   = (chord_c*.4)-(chord_d*.4)
+percent_chord_spar  = 0.4
+percent_chord_spar2 = 0.65
+a620_spar_extents   = [-0.05539,0.14396]
+a620_spar2_extents  = [-0.03769,0.10639]
+a618_spar_extents   = [-0.04539,0.13011]
+a618_spar2_extents  = [-0.03048,0.09918]
+a616_spar_extents   = [-0.03539,0.12455]
+a616_spar2_extents  = [-0.02328,0.09198]
+root_chord          = 48
+chord_a             = 382.5-338.8
+chord_b             = 380.3-342.9
+chord_c             = 376.65-349.9
+chord_d             = 372.92-356.93
+offset_a            = (root_chord*.4)-(chord_a*.4)
+offset_b            = (chord_a*.4)-(chord_b*.4)
+offset_c            = (chord_b*.4)-(chord_c*.4)
+offset_d            = (chord_c*.4)-(chord_d*.4)
 
 
 
 # wing
-wing_skin(airfoil1, root_chord, airfoil2, chord_a, 36,offset_a)
-wing_skin(airfoil2, chord_a, airfoil3, chord_b, 52,offset_b)
-wing_skin(airfoil3, chord_b, airfoil3, chord_c, 90,offset_c)
-wing_skin(airfoil3, chord_c, airfoil3, chord_d, 90,offset_d)
+wing_skin(airfoil1, root_chord, airfoil2, chord_a, 36,offset_a, tx=-140, ty=0)
+wing_skin(airfoil2, chord_a, airfoil3, chord_b, 52,offset_b, tx=-140, ty=-40)
+wing_skin(airfoil3, chord_b, airfoil3, chord_c, 90,offset_c, tx=-140, ty=-95)
+wing_skin(airfoil3, chord_c, airfoil3, chord_d, 90,offset_d, tx=-140, ty=-190)
+
+#spars
+wing_spar(root_chord,chord_a,36,a620_spar_extents,a618_spar_extents,tx=-180,ty=-250)
+wing_spar(chord_a,chord_b,52,a618_spar_extents,a616_spar_extents,tx=-180,ty=-250+36)
+wing_spar(chord_b,chord_c,90,a616_spar_extents,a616_spar_extents,tx=-180,ty=-250+36+52)
+wing_spar(chord_c,chord_d,90,a616_spar_extents,a616_spar_extents,tx=-180,ty=-250+36+52+90)
+
+
 
 #vtail_curve = wing_skin(airfoil4, 42.65, airfoil4, 17.625, 28, 18.5)[0][50:90]
 vtail_base,vtail_top,vtail_skin = wing_skin(airfoil4, 42.65, airfoil4, 17.625, 28, 18.5)
@@ -198,37 +210,43 @@ build_flat_fan((213,42,4.6),vstab_lower_curve)
 # upper vertical stabilizer
 build_flat_shape(vstab_middle_curve,vstab_upper_curve)
 
+
+
+
 # rudder
+# the single most complicated part of this whole thing.
+
 rudder_lower_end = [(254.57,42,0)]
 rudder_bottom_end = [(251.91,44,0)]
+
 rudder_front_bottom = make_ellipse({'width':             2.163,
                                     'height':            2.163,
                                     'datum':             239.0,
                                     'horizontal_center': 0,
                                     'vertical_center':   44,
                                     'amount':            0.5},
-                                    numsteps=100, mode=2, flip=2)
+                                    numsteps=20, mode=2, flip=2)
 rudder_front_lower  = make_ellipse({'width':             2.251,
                                      'height':            2.251,
                                      'datum':             239.26,
                                      'horizontal_center': 0,
                                      'vertical_center':   42,
                                      'amount':            0.5},
-                                     numsteps=100, mode=2, flip=2)
+                                     numsteps=20, mode=2, flip=2)
 rudder_front_middle  = make_ellipse({'width':             2.012,
                                      'height':            2.012,
                                      'datum':             241.8,
                                      'horizontal_center': 0,
                                      'vertical_center':   22,
                                      'amount':            0.5},
-                                     numsteps=100, mode=2, flip=2)
+                                     numsteps=20, mode=2, flip=2)
 rudder_front_upper   = make_ellipse({'width':             .881,
                                      'height':            .881,
                                      'datum':             244.93,
                                      'horizontal_center': 0,
                                      'vertical_center':   -6,
                                      'amount':            0.5},
-                                     numsteps=100, mode=2, flip=2)
+                                     numsteps=20, mode=2, flip=2)
 
 rudder_middle_curve  = vtail_base[0:46]
 rudder_upper_curve   = vtail_top[0:46]
@@ -249,48 +267,51 @@ a=build_flat_fan((239.26,42,2.28),rudder_lower_end+rudder_middle_curve+[(241.8,2
 b=build_flat_shape(rudder_front_lower, rudder_front_middle, start=a)
 c=build_flat_fan((239.26,42,2.28),rudder_lower_end+rudder_middle_curve+[(241.8,22,2.02)],start_pivot=b[1][-1],start_point=b[2][0],reverse=True)
 
-print(points_to_poly(rudder_lower_end+rudder_front_lower+rudder_lower_end,xindex=0,yindex=2))
-print(points_to_poly(rudder_bottom_end+rudder_front_bottom+rudder_bottom_end,xindex=0,yindex=2))
-
 # rudder lower
 build_flat_shape(rudder_lower_end+rudder_front_lower+rudder_lower_end,
-                 rudder_bottom_end+rudder_front_bottom+rudder_bottom_end)
+                 rudder_bottom_end+rudder_front_bottom+rudder_bottom_end,hoffset=-80,voffset=-200)
 
+print(points_to_poly(rudder_lower_end+rudder_front_lower+rudder_lower_end,
+                     xindex=0,yindex=2))
+print(points_to_poly(rudder_bottom_end+rudder_front_bottom+rudder_bottom_end,
+                     xindex=0,yindex=2))
 # horizontal tail
 a = 25*.3
 b = 18*.3
-#wing_skin(airfoil4, 25, airfoil4, 18, 62, a-b)
+wing_skin(airfoil4, 25, airfoil4, 18, 62, a-b)
 
 
 
 
 
 # make bulkheads
-for station in fuselage:
-    points = ''
-   
+for i in range(len(fuselage)):
+    tx = 110
+    ty = -350+i*30
+    station = fuselage[i]
+    #points = ''
+    points = [] 
     if station['upper']['height']:
         upper = make_ellipse(station['upper'], flip=True)
         upper = [(i[2],i[1]) for i in upper]
-        for j in upper:
-            points += '{},{} \n'.format(j[0],j[1])
-        connecting_strip(upper,[],flange_width, 4)
+        points += upper
+        connecting_strip(upper,[],flange_width, 4, tx=tx,ty=ty)
     else:
-        points += '{},{} \n'.format(station['upper']['width'],
-                                    station['upper']['vertical_center'])
-        points += '{},{} \n'.format(station['upper']['width']*-1.0,
-                                    station['upper']['vertical_center'])
+        if station['upper']['width'] and station['upper']['vertical_center']:
+            points.append((station['upper']['width'],
+                           station['upper']['vertical_center']))
+            points.append((station['upper']['width']*-1.0,
+                           station['upper']['vertical_center']))
 
     if station['lower']['height']:
         lower = make_ellipse(station['lower'])
         lower = [(i[2],i[1]) for i in lower]
         lower.reverse()
-        for j in lower:
-            points += '{},{} \n'.format(j[0],j[1])
-        connecting_strip(lower,[],flange_width, 4)
+        points += lower
+        connecting_strip(lower,[],flange_width, 4, tx=tx,ty=ty)
 
     if points:
-        print('<polygon stroke-width="0.1" fill="none" stroke="black" points="{}" />'.format(points))
+        print(points_to_poly(points, tx=tx,ty=ty))
 
 print('</svg>')    
 
