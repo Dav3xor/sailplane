@@ -265,7 +265,7 @@ def build_flat_fan(pivot, fan, start_pivot=(0,0), start_point=None, reverse=Fals
     print(points_to_poly(flattened,tx=tx,ty=ty))
     return flattened
     
-def build_flat_shape(a,b, voffset=0, hoffset=0, start=None):
+def build_flat_shape(a,b, voffset=0, hoffset=0, start=None, tx=0, ty=0):
     #print(a)
     #print(b)
     flattened_a  = []
@@ -306,7 +306,7 @@ def build_flat_shape(a,b, voffset=0, hoffset=0, start=None):
     # beginning.
     flattened_b.reverse()
 
-    print(points_to_poly(flattened_a+flattened_b))
+    print(points_to_poly(flattened_a+flattened_b, tx=tx, ty=ty))
     
     return ((height*-1.0)+voffset, flattened_a, flattened_b)
     #return (height*-1.0)+voffset

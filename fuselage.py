@@ -161,10 +161,10 @@ offset_d            = (chord_c*.4)-(chord_d*.4)
 
 
 # wing
-wing_skin(airfoil1, root_chord, airfoil2, chord_a, 36,offset_a, tx=-140, ty=0)
-wing_skin(airfoil2, chord_a, airfoil3, chord_b, 52,offset_b, tx=-140, ty=-40)
-wing_skin(airfoil3, chord_b, airfoil3, chord_c, 90,offset_c, tx=-140, ty=-95)
-wing_skin(airfoil3, chord_c, airfoil3, chord_d, 90,offset_d, tx=-140, ty=-190)
+wing_skin(airfoil1, root_chord, airfoil2, chord_a, 36, offset_a, tx=-140, ty=0)
+wing_skin(airfoil2, chord_a, airfoil3,    chord_b, 52, offset_b, tx=-140, ty=-40)
+wing_skin(airfoil3, chord_b, airfoil3,    chord_c, 90, offset_c, tx=-140, ty=-95)
+wing_skin(airfoil3, chord_c, airfoil3,    chord_d, 90, offset_d, tx=-140, ty=-190)
 
 #spars
 wing_spar(root_chord,chord_a,36,a620_spar_extents,a618_spar_extents,tx=-180,ty=-250)
@@ -175,7 +175,7 @@ wing_spar(chord_c,chord_d,90,a616_spar_extents,a616_spar_extents,tx=-180,ty=-250
 
 
 #vtail_curve = wing_skin(airfoil4, 42.65, airfoil4, 17.625, 28, 18.5)[0][50:90]
-vtail_base,vtail_top,vtail_skin = wing_skin(airfoil4, 42.65, airfoil4, 17.625, 28, 18.5)
+vtail_base,vtail_top,vtail_skin = wing_skin(airfoil4, 42.65, airfoil4, 17.625, 28, 18.5, tx=180,ty=-200)
 vstab_lower_curve  = vtail_base[47:90]
 vstab_middle_curve = vtail_base[50:-50]
 vstab_upper_curve  = vtail_top[50:-50]
@@ -206,9 +206,9 @@ vstab_upper_curve.insert(0,(244.93,-6,.91))
 vstab_upper_curve.append(  (244.93,-6,-.91))
 
 # lower vertical stabilizer
-build_flat_fan((213,42,4.6),vstab_lower_curve)
+build_flat_fan((213,42,4.6),vstab_lower_curve, tx=160, ty=-20)
 # upper vertical stabilizer
-build_flat_shape(vstab_middle_curve,vstab_upper_curve)
+build_flat_shape(vstab_middle_curve,vstab_upper_curve,tx=140,ty=-40)
 
 
 
@@ -256,29 +256,29 @@ transform_tail(rudder_upper_curve,217.5,-6)
 rudder_middle = rudder_middle_curve + rudder_front_middle + flip_z(rudder_middle_curve)
 rudder_upper = rudder_upper_curve + rudder_front_upper + flip_z(rudder_upper_curve)
 
-print(points_to_poly(rudder_middle,xindex=0,yindex=2))
-print(points_to_poly(rudder_upper,xindex=0,yindex=2))
+print(points_to_poly(rudder_middle,xindex=0,yindex=2,tx=-110,ty=-250))
+print(points_to_poly(rudder_upper,xindex=0,yindex=2,tx=-110,ty=-240))
 
 # rudder top
-build_flat_shape(rudder_middle,rudder_upper)
+build_flat_shape(rudder_middle,rudder_upper,tx=130,ty=-170)
 
 # rudder middle
-a=build_flat_fan((239.26,42,2.28),rudder_lower_end+rudder_middle_curve+[(241.8,22,2.02)])
-b=build_flat_shape(rudder_front_lower, rudder_front_middle, start=a)
-c=build_flat_fan((239.26,42,2.28),rudder_lower_end+rudder_middle_curve+[(241.8,22,2.02)],start_pivot=b[1][-1],start_point=b[2][0],reverse=True)
+a=build_flat_fan((239.26,42,2.28),rudder_lower_end+rudder_middle_curve+[(241.8,22,2.02)],tx=160,ty=-140)
+b=build_flat_shape(rudder_front_lower, rudder_front_middle, start=a,tx=160,ty=-140)
+c=build_flat_fan((239.26,42,2.28),rudder_lower_end+rudder_middle_curve+[(241.8,22,2.02)],start_pivot=b[1][-1],start_point=b[2][0],reverse=True,tx=160,ty=-140)
 
 # rudder lower
 build_flat_shape(rudder_lower_end+rudder_front_lower+rudder_lower_end,
-                 rudder_bottom_end+rudder_front_bottom+rudder_bottom_end,hoffset=-80,voffset=-200)
+                 rudder_bottom_end+rudder_front_bottom+rudder_bottom_end,hoffset=140,voffset=-80)
 
 print(points_to_poly(rudder_lower_end+rudder_front_lower+rudder_lower_end,
-                     xindex=0,yindex=2))
+                     xindex=0,yindex=2,tx=-110,ty=-230))
 print(points_to_poly(rudder_bottom_end+rudder_front_bottom+rudder_bottom_end,
-                     xindex=0,yindex=2))
+                     xindex=0,yindex=2,tx=-110,ty=-220))
 # horizontal tail
 a = 25*.3
 b = 18*.3
-wing_skin(airfoil4, 25, airfoil4, 18, 62, a-b)
+wing_skin(airfoil4, 25, airfoil4, 18, 62, a-b,tx=180,ty=-100)
 
 
 
