@@ -102,6 +102,11 @@ def rotate(point, angle):
 print('<svg width="200in" height="200in" viewBox="0 0 200 200" viewboxxmlns="http://www.w3.org/2000/svg">')
 
 
+def ellipse_point(angle, e):
+    x = math.sin(angle)*e['height']
+    y = math.cos(angle)*e['width']
+    return e['datum'],x,y
+
 def make_ellipse(e, numsteps = 100, flip=False, mode=1):
     points = []
     flip = -1.0 if flip else 1.0
@@ -135,6 +140,10 @@ def ellipses(ellipses, hoffset=0):
         results.append((a,b))        
     
     return results
+
+def make_tab(a,b,width=.75,tilt=.1):\
+    base_angle = math.atan2(a[0]-b[0],a[1]-b[1])
+    
 
 def connecting_strip(centerline, edges, width, skip, tx=0,ty=0):
     a = []
@@ -205,13 +214,25 @@ def points_to_poly(points,xindex=0,yindex=1,tx=0.0,ty=0.0):
 
     return f'<polygon stroke-width="0.1" fill="none" stroke="black" points="{poly}" />'
 
-def wing_skin(airfoil1, chord1, airfoil2, chord2, span, sweep, tx=0, ty=0):
+def points_to_line(p1,p2):
+    return f'<line x1="{p1[0]}" y1="{p1[1]}" x2="{p2[0]}" y2="{p2[1]}" style="stroke:black;stroke-width:0.1" />'
+
+def wing_skin(airfoil1, chord1, airfoil2, chord2, span, sweep, tx=0, ty=0,spanlines=[]):
     af1_shape = expand_airfoil(airfoil1, chord1, 0, 0)
     af2_shape = expand_airfoil(airfoil2, chord2, span, sweep)
    
     print(points_to_poly(af1_shape,tx=tx,ty=ty-20))
     print(points_to_poly(af2_shape,tx=tx,ty=ty-10))
+
     a,b,c = build_flat_shape(af1_shape, af2_shape, voffset=ty, hoffset=tx)
+
+    for line in spanlines:
+        for i in range(len(airfoil1)):
+            if line == airfoil1[i][0]:
+                #print(f'{i} - {airfoil1[i]}')
+                #print(f'{b[i]},{c[i]}')
+                print(points_to_line(b[i],c[-1*i - 1]))
+
     connecting_strip(c,[],.75,3)
     # I used this to determine which parts of the 
     #print(af1_shape[50:90])
@@ -305,8 +326,9 @@ def build_flat_shape(a,b, voffset=0, hoffset=0, start=None, tx=0, ty=0):
     # reverse the b side, otherwise it would skip back to the 
     # beginning.
     flattened_b.reverse()
-
-    print(points_to_poly(flattened_a+flattened_b, tx=tx, ty=ty))
+    
+    # TODO: remember to bring this back, David!
+    #print(points_to_poly(flattened_a+flattened_b, tx=tx, ty=ty))
     
     return ((height*-1.0)+voffset, flattened_a, flattened_b)
     #return (height*-1.0)+voffset
