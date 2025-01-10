@@ -1,7 +1,8 @@
 import math
 import shapely
 
-
+# trilateration:
+# https://github.com/noomrevlis/trilateration/blob/master/trilateration2D.py
 def get_intersections(p1, r1, p2, r2):
     # circle 1: (x0, y0), radius r0
     # circle 2: (x1, y1), radius r1
@@ -22,6 +23,14 @@ def get_intersections(p1, r1, p2, r2):
         print("coincident")
         return None
     else:
+        a = (pow(r1, 2) - pow(r2, 2) + pow(d, 2)) / (2*d)
+        h  = math.sqrt(pow(r1, 2) - pow(a, 2))
+        x0 = p1[0] + a*(p2[0] - p1[0])/d 
+        y0 = p1[1] + a*(p2[1] - p1[1])/d
+        rx = -(p2[1] - p1[1]) * (h/d)
+        ry = -(p2[0] - p1[0]) * (h / d)
+        return ((x0+rx, y0-ry), (x0-rx, y0+ry))
+        """
         a=(r1**2-r2**2+d**2)/(2*d)
         h=math.sqrt(r1**2-a**2)
 
@@ -34,7 +43,7 @@ def get_intersections(p1, r1, p2, r2):
         p5 = ( p3[0]-h*(p2[1]-p1[1])/d,
                p3[1]+h*(p2[0]-p1[0])/d )
         return (p4,p5)
-
+        """
 def isleft(a, b, c):
   return (b[0] - a[0])*(c[1] - a[1]) - (b[1] - a[1])*(c[0] - a[0]) > 0;
   return (b.x - a.x)*(c.y - a.y) - (b.y - a.y)*(c.x - a.x) > 0;
@@ -169,22 +178,20 @@ def adjust_ellipse(a,b_old,ea,eb, numsteps=100):
         
 def ellipses(ellipses, hoffset=0, numsteps = 100):
     for e in ellipses:
-        e['points'] = make_unit_ellipse(e, numsteps=numsteps)
+        e['points'] = make_unit_ellipse(e, flip=True, numsteps=numsteps)
     voffset = 0
     results = []
     for i in range(len(ellipses)-1):
         a = ellipses[i]['points'].copy()
         b = ellipses[i+1]['points'].copy()
-        print('---')
-        print(b)
         #a = adjust_ellipse(b,a,ellipses[i+1],ellipses[i],numsteps=numsteps)
-        b = adjust_ellipse(a,b,ellipses[i],ellipses[i+1],numsteps=numsteps)
-        print('---')
-        print(b)
-        print('---')
-        print('-------')
+        #b = adjust_ellipse(a,b,ellipses[i],ellipses[i+1],numsteps=numsteps)
         translate_poly(a, ellipses[i]['datum'], ellipses[i]['vertical_center'], ellipses[i]['horizontal_center'])
         translate_poly(b, ellipses[i+1]['datum'], ellipses[i+1]['vertical_center'], ellipses[i+1]['horizontal_center'])
+        print("+++")
+        print(a)
+        print(b)
+        print("+++")
         voffset,a,b = build_flat_shape(a,
                                        b,
                                        voffset, hoffset)
