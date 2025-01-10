@@ -6,15 +6,16 @@ def get_intersections(p1, r1, p2, r2):
     # circle 1: (x0, y0), radius r0
     # circle 2: (x1, y1), radius r1
 
-    d=math.sqrt((p2[0]-p1[0])**2 + (p2[1]-p1[1])**2)
-    
+    #d=math.sqrt((p2[0]-p1[0])**2 + (p2[1]-p1[1])**2)
+    d = distance(p2,p1)
+
     # non intersecting
     if d > r1 + r2 :
         print("non intersecting")
         return None
     # One circle within other
     if d < abs(r1-r2):
-        print("within")
+        print(f"within d={d} r1={r1} r2={r2}")
         return None
     # coincident circles
     if d == 0 and r1 == r2:
@@ -57,6 +58,8 @@ def find_pointr(a,b,A,B):
 
 
 def distance(a,b):
+    if len(a) != len(b):
+        5/0
     if len(a) == 3:
         return distance3(a[0]-b[0], a[1]-b[1],a[2]-b[2])
     if len(a) == 2:
@@ -105,40 +108,88 @@ print('<svg width="200in" height="200in" viewBox="0 0 200 200" viewboxxmlns="htt
 def ellipse_point(angle, e):
     x = math.sin(angle)*e['height']
     y = math.cos(angle)*e['width']
-    return e['datum'],x,y
+    return 0,x,y
 
-def make_ellipse(e, numsteps = 100, flip=False, mode=1):
+def make_unit_ellipse(e, numsteps = 100, flip=False, mode=1):
     points = []
     flip = -1.0 if flip else 1.0
     for step in range(numsteps):
         step_angle = (2*3.14159*e['amount'])/(numsteps-1)
         angle = step * step_angle
-        #points.append(( (math.cos(angle)*e['width'])+e['horizontal_center'], 
-        #                (math.sin(angle)*e['height']*flip)+e['vertical_center'],
-        #                e['datum']))
+        #if mode == 1:
+        #    points.append(( e['datum'],
+        #                    (math.sin(angle)*e['height']*flip)+e['vertical_center'],
+        #                    (math.cos(angle)*e['width'])+e['horizontal_center']))
+        #if mode == 2:
+        #    points.append(( (math.sin(angle)*e['height']*flip) + e['datum'],
+        #                    e['vertical_center'],
+        #                    (math.cos(angle)*e['width']) + e['horizontal_center']))
         if mode == 1:
-            points.append(( e['datum'],
-                            (math.sin(angle)*e['height']*flip)+e['vertical_center'],
-                            (math.cos(angle)*e['width'])+e['horizontal_center']))
+            points.append(( 0,
+                            (math.sin(angle)*e['height']*flip),
+                            (math.cos(angle)*e['width'])))
         if mode == 2:
-            points.append(( (math.sin(angle)*e['height']*flip) + e['datum'],
-                            e['vertical_center'],
-                            (math.cos(angle)*e['width']) + e['horizontal_center']))
+            points.append(( (math.sin(angle)*e['height']*flip),
+                            0,
+                            (math.cos(angle)*e['width'])))
 
     return points
 
-def ellipses(ellipses, hoffset=0):
+def make_ellipse(e, numsteps=100, flip=False, mode=1):
+    ellipse = make_unit_ellipse(e,numsteps,flip,mode)
+    translate_poly(ellipse, e['datum'], e['vertical_center'], e['horizontal_center'])
+    return ellipse
+
+def translate_poly(p, x, y, z):
+    for i in range(len(p)):
+        p[i] = (p[i][0]+x, 
+                p[i][1]+y, 
+                p[i][2]+z)
+
+def adjust_ellipse(a,b_old,ea,eb, numsteps=100):
+    step_angle = (2*3.14159*ea['amount'])/(numsteps-1)
+    b = b_old.copy()
+    cur_angles = [i*step_angle for i in range(len(a))]
+    for j in range(20):
+        #print('---')
+        for i in range(len(a)):
+            aa = math.atan2(a[i][2], a[i][1])
+            ab = math.atan2(b[i][2],b[i][1])
+            
+            difference = (aa-ab)
+            if abs(difference) > .0001:
+                cur_angles[i] = cur_angles[i] - (difference / 1.2)
+                b[i] = ellipse_point(cur_angles[i],eb)
+            #print(f'aa={aa} ab={ab} aa-ab={aa-ab}')
+    
+    print(points_to_poly(b_old,xindex=1,yindex=2, color="blue"))
+    print(points_to_poly(a,xindex=1,yindex=2, color="red"))
+    print(points_to_poly(b,xindex=1,yindex=2, color="green"))
+    return b
+        
+def ellipses(ellipses, hoffset=0, numsteps = 100):
     for e in ellipses:
-        e['points'] = make_ellipse(e)
+        e['points'] = make_unit_ellipse(e, numsteps=numsteps)
     voffset = 0
     results = []
     for i in range(len(ellipses)-1):
-        voffset,a,b = build_flat_shape(ellipses[i]['points'],
-                                       ellipses[i+1]['points'], 
+        a = ellipses[i]['points'].copy()
+        b = ellipses[i+1]['points'].copy()
+        print('---')
+        print(b)
+        #a = adjust_ellipse(b,a,ellipses[i+1],ellipses[i],numsteps=numsteps)
+        b = adjust_ellipse(a,b,ellipses[i],ellipses[i+1],numsteps=numsteps)
+        print('---')
+        print(b)
+        print('---')
+        print('-------')
+        translate_poly(a, ellipses[i]['datum'], ellipses[i]['vertical_center'], ellipses[i]['horizontal_center'])
+        translate_poly(b, ellipses[i+1]['datum'], ellipses[i+1]['vertical_center'], ellipses[i+1]['horizontal_center'])
+        voffset,a,b = build_flat_shape(a,
+                                       b,
                                        voffset, hoffset)
         voffset-=2
         results.append((a,b))        
-    
     return results
 
 def make_tab(a,b,width=.75,tilt=.1):\
@@ -203,7 +254,7 @@ def expand_airfoil(airfoil,chord,datum, sweep):
     return points
 
 
-def points_to_poly(points,xindex=0,yindex=1,tx=0.0,ty=0.0):
+def points_to_poly(points,xindex=0,yindex=1,tx=0.0,ty=0.0, color='black'):
     poly = ''
     for point in points:
         try:
@@ -212,7 +263,7 @@ def points_to_poly(points,xindex=0,yindex=1,tx=0.0,ty=0.0):
             print(points)
             5/0
 
-    return f'<polygon stroke-width="0.1" fill="none" stroke="black" points="{poly}" />'
+    return f'<polygon stroke-width="0.1" fill="none" stroke="{color}" points="{poly}" />'
 
 def points_to_line(p1,p2):
     return f'<line x1="{p1[0]}" y1="{p1[1]}" x2="{p2[0]}" y2="{p2[1]}" style="stroke:black;stroke-width:0.1" />'
@@ -309,16 +360,23 @@ def build_flat_shape(a,b, voffset=0, hoffset=0, start=None, tx=0, ty=0):
         d1 = distance(a[step],a[step-1])
         d2 = distance(b[step],b[step-1])
 
+        base1  = distance(a[step-1],b[step-1])
+        base2  = distance(a[step],b[step])
+
         slant1 = distance(b[step-1],a[step])
         slant2 = distance(a[step-1],b[step])
 
         #print(f'd1{d1} d2{d2} slant1{slant1} slant2{slant2} a{flattened_a[-1]} b{flattened_b[-1]}')
+        #new_a = find_pointl(flattened_a[-1], flattened_b[-1], d1, slant1)
+        #new_b = find_pointr(flattened_b[-1], flattened_a[-1], d2, slant2)
+        #new_a = find_pointl(flattened_b[-1], flattened_a[-1], slant1, d1)
         new_a = find_pointl(flattened_a[-1], flattened_b[-1], d1, slant1)
-        new_b = find_pointr(flattened_b[-1], flattened_a[-1], d2, slant2)
+        new_b = find_pointl(new_a, flattened_a[-1], base2, slant2)
+        #new_b = find_pointl(new_a, flattened_b[-1], slant1, d2)
+        #new_b = find_pointl(new_a, flattened_b[-1], base2, d2)
         
         flattened_a.append(new_a)
         flattened_b.append(new_b)
-
 
     points = ''
 
@@ -327,8 +385,7 @@ def build_flat_shape(a,b, voffset=0, hoffset=0, start=None, tx=0, ty=0):
     # beginning.
     flattened_b.reverse()
     
-    # TODO: remember to bring this back, David!
-    #print(points_to_poly(flattened_a+flattened_b, tx=tx, ty=ty))
+    print(points_to_poly(flattened_a+flattened_b, tx=tx, ty=ty))
     
     return ((height*-1.0)+voffset, flattened_a, flattened_b)
     #return (height*-1.0)+voffset

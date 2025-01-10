@@ -6,13 +6,10 @@ from flat_wrap import *
 stations     = [12.0,   17.0,  22.5,  28.0,  35.0,   43.0,   48.0,  58.0,   68.0,   79.0,    84.00,  91.0,   104.0,   126.0,  161.00, 213.0,  235.37,   235.68, 236.01, 237.33 ]
 widths       = [ 6.03,  7.69,   8.93,  9.86, 10.75,  11.50,  11.86, 12.375, 12.67,  12.85,   12.85,  12.85,   12.56,   11.625,  9.125,  4.61,   2.75,   2.75,   2.75 ,   2.75]
 
-#upper_top    = [42.75, 39.375, None,  None,  None,   None,   None,  None,   None,   None,    27.00,  28.04,   29.31,   30.34,  30.91,   32.0,   None,   None,   None,    32.53]
-upper_top    = [42.75, 39.375, None,  None,  None,   None,   None,  None,   None,   None,    27.00,  28.04,   29.31,   30.34,  30.91,   32.0,   None,   None,   None,    18.53]
+upper_top    = [42.75, 39.375, None,  None,  None,   None,   None,  None,   None,   None,    27.00,  28.04,   29.31,   30.34,  30.91,   32.0,   None,   None,   None,    32.53]
 upper_bottom = [48,    47.375, 46.69, 46.0,  45.125, 44.125, 43.5,  42.25,  41.0,   39.625,  39.0,   39.375,  40.375,  41.625, 42.0,    42.0,   None,   None,   42.0,    34.0]
 
 belly_top    = [48,    49.69,  51.13, 52.3,  53.5,   54.47,  54.91, 55.36,  54.95,  52.64,   None,   49.43,   47.04,   44.94,   44,     44,      44,    44,     None,  None]
-#-belly_top    = [48,    49.68,  51.12, 52.30, 53.48,  54.46,  54.88, 55.34,  55.03,  53.44, None,   51.06,   48.52,   45.53,   44.0,   44.0,    None,  None,   None]
-#belly_bottom = [57.75, 59.05,  60.06, 60.75, 61.29,  61.5,   61.5,  61.08,  60.33,  59.12,  None,   57.18,   54.97,   52.09,   49.59,  47.0,    None,  None,   None]
 belly_bottom = [59.375, 60.60, 61.45, 62.00, 62.375, 62.5,   62.5,  62.08,  61.33,  60.13,   None,   58.03,   55.4,    52.12,   49.59,   47,     45.87, None,   None,  None]
 flange_width = .75
 
@@ -52,11 +49,14 @@ for i in range(len(stations)):
     fuselage.append({'upper': upper,
                      'lower': lower})
 
-
-
 # fuselage top & bottom
 lowers = ellipses([i['lower'] for i in fuselage if i['lower']['height']])
 uppers = ellipses([i['upper'] for i in fuselage if i['upper']['height']], 50)
+
+#for i in fuselage:
+#    print (i['upper'])
+#print (uppers)
+#5/0 
 
 # tail triangle
 da = distance((stations[15],upper_bottom[15],widths[15]),
