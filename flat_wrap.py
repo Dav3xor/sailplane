@@ -176,9 +176,9 @@ def adjust_ellipse(a,b_old,ea,eb, numsteps=100):
     print(points_to_poly(b,xindex=1,yindex=2, color="green"))
     return b
         
-def ellipses(ellipses, hoffset=0, numsteps = 100):
+def ellipses(ellipses, hoffset=0, numsteps = 100, flip=False):
     for e in ellipses:
-        e['points'] = make_unit_ellipse(e, flip=True, numsteps=numsteps)
+        e['points'] = make_unit_ellipse(e, flip=flip, numsteps=numsteps)
     voffset = 0
     results = []
     for i in range(len(ellipses)-1):
@@ -202,6 +202,14 @@ def ellipses(ellipses, hoffset=0, numsteps = 100):
 def make_tab(a,b,width=.75,tilt=.1):\
     base_angle = math.atan2(a[0]-b[0],a[1]-b[1])
     
+
+def round_corners(points, *ops):
+    poly = shapely.Polygon(points)
+    #poly = poly.buffer(.05, cap_style=3).buffer(-.05, join_style=1)
+    #poly = poly.buffer(-0.1).buffer(.2).buffer(-0.1)
+    for op in ops:
+        poly = poly.buffer(op)
+    return list(zip(*poly.exterior.coords.xy))
 
 def connecting_strip(centerline, edges, width, skip, tx=0,ty=0):
     a = []
@@ -227,10 +235,9 @@ def connecting_strip(centerline, edges, width, skip, tx=0,ty=0):
     #poly = poly.buffer(.05, cap_style=3).buffer(-.05, join_style=1)
     #poly = poly.buffer(-0.1).buffer(.2).buffer(-0.1)
     poly = poly.buffer(-.1)
-    poly2 = '' 
     points = list(zip(*poly.exterior.coords.xy))
     print(points_to_poly(points, tx=tx,ty=ty))
-    #print (f'<polygon stroke-width="0.1" fill="none" stroke="black" points="{poly2}" />')
+    
     for edge in edges:
         points = []
         poly = ''

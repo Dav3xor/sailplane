@@ -2,18 +2,24 @@ import math
 
 from flat_wrap import *
 
-#                 1       2      3      4      5       6       7      8       9       10       11     12        13       14      15      16       17     18,      19    20
-stations     = [12.0,   17.0,  22.5,  28.0,  35.0,   43.0,   48.0,  58.0,   68.0,   79.0,    84.00,  91.0,   104.0,   126.0,  161.00, 213.0,  235.37,   235.68, 236.01, 237.33 ]
-widths       = [ 6.03,  7.69,   8.93,  9.86, 10.75,  11.50,  11.86, 12.375, 12.67,  12.85,   12.85,  12.85,   12.56,   11.625,  9.125,  4.61,   2.75,   2.75,   2.75 ,   2.75]
-
 flange_width = .75
-
-upper_top    = [21.25, 24.625, None,  None, None,   None,   None, None,  None, None,   37.0, 35.96,  34.69,  33.66,  33.09,  32.0, None,  None, None, 31.47]
-upper_bottom = [16,    16.625, 17.31, 18.0, 18.875, 19.875, 20.5, 21.75, 23.0, 24.375, 25.0, 24.625, 23.625, 22.375, 22.0,   22.0, None,  None, 22.0, 30.0]
-belly_top    = [16,    14.31,  12.87, 11.7, 10.5,   9.53,   9.09, 8.64,  9.05, 11.36,  None, 14.57,  16.96,  19.06,  20,     20,   20,    20,   None, None]
-belly_bottom = [4.625, 3.4,    2.55,  2.0,  1.625,  1.5,    1.5,  1.92,  2.67, 3.87,   None, 5.97,   8.6,    11.88,  14.41,  17,   18.13, None, None, None]
+#                 1       2      3      4      5       6       7      8       9       10       11     12        13       14      15      16       17     18,      19    20
+stations     = [12.0,   17.0,  22.5,  28.0,  35.0,   43.0,   48.0,  58.0,   68.0,   79.0,   84.00, 91.0,   104.0, 126.0,  161.00,  213.0,  235.37, 235.68, 236.01, 237.33 ]
+widths       = [ 6.03,  7.69,   8.93,  9.86, 10.75,  11.50,  11.86, 12.375, 12.67,  12.85,  12.85, 12.85,  12.56,  11.625,  9.125,   4.61,   2.75, 2.75,     2.75 ,   2.75]
+upper_top    = [21.25, 24.625, None,  None,  None,   None,   None,  None,   None,   None,   37.0,  35.96,  34.69,  33.66,  33.09,   32.0,   None,  None,   None, 31.47]
+upper_bottom = [16,    16.625, 17.31, 18.0,  18.875, 19.875, 20.5,  21.75,  23.0,   24.375, 25.0,  24.625, 23.625, 22.375, 22.0,    22.0,   None,  None,    22.0, 30.0]
+belly_top    = [16,    14.31,  12.87, 11.7,  10.5,   9.53,   9.09,  8.64,   9.05,   11.36,  None,  14.57,  16.96,  19.06,  20,      20,     20,    20,     None, None]
+belly_bottom = [4.625, 3.4,    2.55,  2.0,   1.625,  1.5,    1.5,   1.92,   2.67,    3.87,  None,   5.97,   8.6,   11.88,  14.41,   17,     18.13, None,   None, None]
 
 fuselage = []
+
+# spine
+spine  = [(stations[i],widths[i]) for i in range(10,len(widths)-3)] 
+spine += [(i[0],i[1]*-1) for i in reversed(spine)]
+print(points_to_poly(spine,tx=-66,ty=-230))
+print(points_to_poly(round_corners(spine, -3,6,-4), tx=-66,ty=-230))
+
+
 
 
 for i in range(len(stations)):
@@ -48,8 +54,8 @@ for i in range(len(stations)):
                      'lower': lower})
 
 # fuselage top & bottom
-lowers = ellipses([i['lower'] for i in fuselage if i['lower']['height']])
-uppers = ellipses([i['upper'] for i in fuselage if i['upper']['height']], 50)
+lowers = ellipses([i['lower'] for i in fuselage if i['lower']['height']], flip=False)
+uppers = ellipses([i['upper'] for i in fuselage if i['upper']['height']], 50, flip=True)
 #for i in fuselage:
 #    print (i['upper'])
 #print (uppers)
