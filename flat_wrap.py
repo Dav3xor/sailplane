@@ -36,6 +36,17 @@ def flat_box(coords,shapes,tabs):
         cur_perimeter = []
     #print(f'perimeter={perimeter}')
     #5/0
+    poly = shapely.Polygon(perimeter)
+    for line in fold_lines:
+        circle = shapely.Point(*line[0]).buffer(.2)
+        poly = shapely.difference(poly,circle)
+        
+        circle = shapely.Point(*line[1]).buffer(.2)
+        poly = shapely.difference(poly,circle)
+    poly = poly.buffer(.1)
+    poly = poly.buffer(-.2)
+    poly = poly.buffer(.1)
+    perimeter = list(zip(*poly.exterior.coords.xy))
     return perimeter,fold_lines
 
 # trilateration:
