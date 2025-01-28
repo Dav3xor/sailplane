@@ -1,6 +1,43 @@
 import math
 import shapely
 
+
+def flat_box(coords,shapes,tabs):
+    base = shapes[0]
+    flattened = {shapes[0][1]:(distance(coords[shapes[0][0]],
+                               coords[shapes[0][1]]),0),
+                 shapes[0][0]:(0,0)} 
+    cur_perimeter = [flattened[0],flattened[1]]
+    perimeter = []
+    fold_lines = []
+    for shape in shapes:
+        for i in range(len(shape)-2):
+            i0 = shape[i]
+            i1 = shape[(i+1)%len(shape)]
+            i2 = shape[(i+2)%len(shape)]
+            
+            flattened_a = flattened[i0]
+            flattened_b = flattened[i1]
+            d1 = distance(coords[i0],
+                          coords[i2])
+            d2 = distance(coords[i1],
+                          coords[i2])
+            new_p = find_pointl(flattened_a, flattened_b, d1, d2)
+            flattened[i2] = new_p
+            cur_perimeter.append(new_p)
+        if len(perimeter) == 0:
+            perimeter = cur_perimeter
+        else:
+            print(f'{shape[0]} - {shape[1]}')
+            fold_lines.append((flattened[shape[0]],flattened[shape[1]]))
+            pos = perimeter.index(flattened[shape[0]])
+            #cur_perimeter.reverse()
+            perimeter[pos:pos] = cur_perimeter
+        cur_perimeter = []
+    #print(f'perimeter={perimeter}')
+    #5/0
+    return perimeter,fold_lines
+
 # trilateration:
 # https://github.com/noomrevlis/trilateration/blob/master/trilateration2D.py
 def get_intersections(p1, r1, p2, r2):
@@ -80,15 +117,6 @@ def distance2(dx,dy):
     return math.sqrt(dx**2 + dy**2)
 
 
-def tri_anglea(a,b,c):
-  stuff = ((b**2)+(c**2)-(a**2)) / (2*b*c)
-  print(f'anglea {stuff}')
-  return math.acos( stuff )
-
-def tri_angleb(a,b,c):
-  stuff = ((a**2)+(c**2)-(b**2)) / (2*a*c)
-  print(f'angleb {stuff}')
-  return math.acos(stuff)
 
 def load_airfoil(filename):
     coords = []
@@ -188,10 +216,10 @@ def ellipses(ellipses, hoffset=0, numsteps = 100, flip=False):
         #b = adjust_ellipse(a,b,ellipses[i],ellipses[i+1],numsteps=numsteps)
         translate_poly(a, ellipses[i]['datum'], ellipses[i]['vertical_center'], ellipses[i]['horizontal_center'])
         translate_poly(b, ellipses[i+1]['datum'], ellipses[i+1]['vertical_center'], ellipses[i+1]['horizontal_center'])
-        print("+++")
-        print(a)
-        print(b)
-        print("+++")
+        #print("+++")
+        #print(a)
+        #print(b)
+        #print("+++")
         voffset,a,b = build_flat_shape(a,
                                        b,
                                        voffset, hoffset)
@@ -199,9 +227,17 @@ def ellipses(ellipses, hoffset=0, numsteps = 100, flip=False):
         results.append((a,b))        
     return results
 
-def make_tab(a,b,width=.75,tilt=.1):\
+def make_tab(a,b,width=.75,tilt=.2):
     base_angle = math.atan2(a[0]-b[0],a[1]-b[1])
-    
+    points = []
+    angle = math.atan2(a[0]-b[0], a[1]-b[1])
+    points.append(a)
+    points.append((a[0]+width*math.sin(angle-tilt-(math.pi/2)),
+              a[1]+width*math.cos(angle-tilt-(math.pi/2))))
+    points.append((b[0]+width*math.sin(angle+tilt-(math.pi/2)),
+              b[1]+width*math.cos(angle+tilt-(math.pi/2))))
+    points.append(b)
+    return points 
 
 def round_corners(points, *ops):
     poly = shapely.Polygon(points)
@@ -210,6 +246,8 @@ def round_corners(points, *ops):
     for op in ops:
         poly = poly.buffer(op)
     return list(zip(*poly.exterior.coords.xy))
+
+
 
 def connecting_strip(centerline, edges, width, skip, tx=0,ty=0):
     a = []
@@ -328,6 +366,9 @@ def flat_triangle(pa,pb,d1,d2,side='left'):
     pc = find_pointl(pa,pb,d1,d2) if side == 'left' else find_pointr(pa,pb,d1,d2)
     poly += f'{pc[0]},{pc[1]} \n'
     return f'<polygon stroke-width="0.1" fill="none" stroke="black" points="{poly}" />'
+
+def build_dashed_line(a,b):
+    return f'<line stroke-width="0.1" stroke="blue" stroke-dasharray="0.5, 0.5" x1="{a[0]}" y1="{a[1]}" x2="{b[0]}" y2="{b[1]}"></line>'
 
 def build_flat_fan(pivot, fan, start_pivot=(0,0), start_point=None, reverse=False, tx=0,ty=0):
     flattened = []

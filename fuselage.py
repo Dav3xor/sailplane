@@ -2,7 +2,18 @@ import math
 
 from flat_wrap import *
 
-flange_width = .75
+
+# general dimensions:
+flange_width          = .75
+seat_width            = 19
+console_edge_radius   = 1.5
+console_edge_unrolled = (console_edge_radius*math.pi)/2
+
+
+#console / seat bottom coordinates
+seat_bottom = (0,5),(10,11),(17.5,11),(20.5,9.5),(21.875,8.0),(31.0,8.0)
+
+
 #                 1       2      3      4      5       6       7      8       9       10       11     12        13       14      15      16       17     18,      19    20
 stations     = [12.0,   17.0,  22.5,  28.0,  35.0,   43.0,   48.0,  58.0,   68.0,   79.0,   84.00, 91.0,   104.0, 126.0,  161.00,  213.0,  235.37, 235.68, 236.01, 237.33 ]
 widths       = [ 6.03,  7.69,   8.93,  9.86, 10.75,  11.50,  11.86, 12.375, 12.67,  12.85,  12.85, 12.85,  12.56,  11.625,  9.125,   4.61,   2.75, 2.75,     2.75 ,   2.75]
@@ -13,12 +24,87 @@ belly_bottom = [4.625, 3.4,    2.55,  2.0,   1.625,  1.5,    1.5,   1.92,   2.67
 
 fuselage = []
 
-# spine
-spine  = [(stations[i],widths[i]) for i in range(10,len(widths)-3)] 
-spine += [(i[0],i[1]*-1) for i in reversed(spine)]
-print(points_to_poly(spine,tx=-66,ty=-230))
-print(points_to_poly(round_corners(spine, -3,6,-4), tx=-66,ty=-230))
+#consoles
+console = []
+console_start = 6
+console_end   = 9
 
+
+
+a = [(0,0,0),  (10,0,0),  (10,10,0),  (0,10,0),
+     (0,0,10), (10,0,10), (10,10,10), (0,10,10), (10,0,10), (10,10,10)]
+
+b = [(0,1,2,3), # top
+     (1,0,4,5),
+     (2,1,5,6),
+     (3,2,6,7),
+     (0,3,7,4),
+     (4,7,6,5)
+     ]
+
+c = [(1,1,1),(5,1,1),(5,5,1),(1,5,1)]
+d = [(0,5,1),(0,1,1),
+     (6,5,1),(6,1,1),
+     (5,6,1),(1,6,1)],
+e = [(0,1,2,3),(0,3,4,5),(2,3,7,6),(3,0,8,9)]
+
+perimeter,fold_lines = flat_box(a,b,
+                                [])
+print(points_to_poly(perimeter))
+for line in fold_lines:
+    print(build_dashed_line(*line))
+
+# first the top of the consoles
+for i in range(console_start,console_end+1):
+    console.append((widths[i]-(seat_width/2),stations[i]-stations[console_start]))
+for i in range(len(console)-1):
+    print(points_to_poly(make_tab(console[i],console[i+1])))
+console = [(console_edge_radius,console[0][1])] + console + [(console_edge_radius,console[-1][1])]
+print(build_dashed_line(console[0],console[-1]))
+console = [(console[0][0]-console_edge_unrolled,console[0][1])] + console + [(console[-1][0]-console_edge_unrolled,console[-1][1])]
+print(build_dashed_line(console[0],console[-1]))
+
+# console sides (your legs go between these)
+for i in reversed(seat_bottom):
+    console.append((console[0][0]+1.5-i[1],i[0]))
+print(points_to_poly(console))
+
+
+first_console_cone = [{'width':             .875,
+                       'height':            console_edge_radius,
+                       'datum':             0,
+                       'horizontal_center': -.3,
+                       'vertical_center':   0,
+                       'amount':            0.25},
+                      {'width':             console_edge_radius,
+                       'height':            console_edge_radius,
+                       'datum':             10,
+                       'horizontal_center': 0,
+                       'vertical_center':   0,
+                       'amount':            0.25}]
+print(ellipses(first_console_cone))
+
+
+
+# spine
+spine  = [(widths[i],stations[i]) for i in range(10,len(widths)-3)] 
+spine += [(i[0]*-1,i[1]) for i in reversed(spine)]
+
+# outline
+print(points_to_poly(spine,tx=-16,ty=-280))
+
+# cutouts & tabs
+for i in range((len(spine)//2)-1):
+    cutout = [spine[i],spine[i+1],spine[(-1 * i) - 2],spine[(-1 * i) -1]]
+    print(points_to_poly(round_corners(cutout, -4,7,-5), tx=-16,ty=-280))
+
+    print(points_to_poly(make_tab(spine[i],spine[i+1]), tx=-16,ty=-280))
+    print(points_to_poly(make_tab(spine[(-1*i)-2],spine[(-1*i)-1]), tx=-16,ty=-280))
+
+
+
+
+# --------------------------------------------------------------------------------------------------------
 
 
 
