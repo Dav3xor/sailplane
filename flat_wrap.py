@@ -2,15 +2,16 @@ import math
 import shapely
 
 
-def flat_box(coords,shapes,tabs):
+def flat_box(coords,shapes,tabs,tx=0,ty=0):
     base = shapes[0]
     flattened = {shapes[0][1]:(distance(coords[shapes[0][0]],
                                coords[shapes[0][1]]),0),
                  shapes[0][0]:(0,0)} 
-    cur_perimeter = [flattened[0],flattened[1]]
+    cur_perimeter = [flattened[shapes[0][0]],flattened[shapes[0][1]]]
     perimeter = []
     fold_lines = []
     for shape in shapes:
+        print(shape)
         for i in range(len(shape)-2):
             i0 = shape[i]
             i1 = shape[(i+1)%len(shape)]
@@ -39,14 +40,17 @@ def flat_box(coords,shapes,tabs):
     poly = shapely.Polygon(perimeter)
     for line in fold_lines:
         circle = shapely.Point(*line[0]).buffer(.2)
-        poly = shapely.difference(poly,circle)
+        #poly = shapely.difference(poly,circle)
         
         circle = shapely.Point(*line[1]).buffer(.2)
-        poly = shapely.difference(poly,circle)
-    poly = poly.buffer(.1)
-    poly = poly.buffer(-.2)
-    poly = poly.buffer(.1)
+        #poly = shapely.difference(poly,circle)
+    #poly = poly.buffer(.1)
+    #poly = poly.buffer(-.2)
+    #poly = poly.buffer(.1)
     perimeter = list(zip(*poly.exterior.coords.xy))
+    perimeter = [(p[0]+tx,p[1]+ty) for p in perimeter]
+    fold_lines = [((l[0][0]+tx,l[0][1]+ty),
+                   (l[1][0]+tx,l[1][1]+ty)) for l in fold_lines]
     return perimeter,fold_lines
 
 # trilateration:

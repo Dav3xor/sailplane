@@ -1,38 +1,137 @@
-import math
+import math 
+from flat_wrap import * # general dimensions:
 
-from flat_wrap import *
-
-
-# general dimensions:
 flange_width          = .75
 seat_width            = 19
-console_edge_radius   = 1.5
-console_edge_unrolled = (console_edge_radius*math.pi)/2
-
+seat_half_width       = seat_width/2.0
+console_height        = 14
 
 #console / seat bottom coordinates
 seat_bottom = (0,5),(10,11),(17.5,11),(20.5,9.5),(21.875,8.0),(31.0,8.0)
 
 
-#                 1       2      3      4      5       6       7      8       9       10       11     12        13       14      15      16       17     18,      19    20
-stations     = [12.0,   17.0,  22.5,  28.0,  35.0,   43.0,   48.0,  58.0,   68.0,   79.0,   84.00, 91.0,   104.0, 126.0,  161.00,  213.0,  235.37, 235.68, 236.01, 237.33 ]
-widths       = [ 6.03,  7.69,   8.93,  9.86, 10.75,  11.50,  11.86, 12.375, 12.67,  12.85,  12.85, 12.85,  12.56,  11.625,  9.125,   4.61,   2.75, 2.75,     2.75 ,   2.75]
-upper_top    = [21.25, 24.625, None,  None,  None,   None,   None,  None,   None,   None,   37.0,  35.96,  34.69,  33.66,  33.09,   32.0,   None,  None,   None, 31.47]
-upper_bottom = [16,    16.625, 17.31, 18.0,  18.875, 19.875, 20.5,  21.75,  23.0,   24.375, 25.0,  24.625, 23.625, 22.375, 22.0,    22.0,   None,  None,    22.0, 30.0]
-belly_top    = [16,    14.31,  12.87, 11.7,  10.5,   9.53,   9.09,  8.64,   9.05,   11.36,  None,  14.57,  16.96,  19.06,  20,      20,     20,    20,     None, None]
-belly_bottom = [4.625, 3.4,    2.55,  2.0,   1.625,  1.5,    1.5,   1.92,   2.67,    3.87,  None,   5.97,   8.6,   11.88,  14.41,   17,     18.13, None,   None, None]
-
-fuselage = []
-
-#consoles
-console = []
-console_start = 6
-console_end   = 9
+#                 1      2       3      4      5       6       7      8       9       10      11     12       13     14      15       16      17      18,     19      20      21
+stations     = [18.0,  22.0,   26.0,  31.0,  36.0,   43.0,   48.0,  58.0,   68.0,   79.0,   84.00, 91.0,   106.0, 126.0,  146.00,  170.00, 196.0,  224.0,  246.68, 247.02, 248.33 ]
+widths       = [ 6.66,  7.89,   8.84,  9.79, 10.54,  11.34,  11.8,  12.43,  12.75,  12.83,  12.77, 12.61,  11.91,  10.40,   8.62,    6.67,   5.0,    3.64,   2.75,   2.75 ,  2.75]
+upper_top    = [20.08, 23.09,  25.52, 28.02, 30.10,  32.48,  33.86, 35.92,  37.09,  37.30,  36.97, 36.39,  35.45,  34.53,  33.84,   33.15,  32.55,  32.0,   None,    None,  31.47]
+upper_bottom = [14.0,  14.65,  15.32, 16.16, 17.00,  18.16,  19.00, 20.65,  22.32,  24.16,  25.0,  24.66,  24.01,  23.28,  22.69,   22.20,  22.0,   22.0,   None,   22.0,   30.0]
+belly_top    = [14.0,  12.57,  11.59, 10.68, 10.01,  9.35,   9.04,  8.75,   9.07,   10.32,  None,  12.38,  14.90,  17.31,  18.78,   19.70,  20,     20,     20.0,    None,  None]
+belly_bottom = [ 4.07, 3.13,    2.53,  2.02,  1.70,  1.5,    1.5,   1.87,   2.87,    4.54,  None,   6.75,   9.61,  12.46,  13.93,   15.17,  16.18,  16.97,   None,   None,  None]
+floor_level  = [14.0,  8.0,     5.5,   5.5,   5.5,  10.0,   10.0,   5.0,    5.0]    
 
 
 
+def mirrorz(points):
+    points2 = []
+    for i in points:
+        points2.append(i)
+        points2.append((i[0],i[1],i[2]*-1.0))
+    return points2
+def parallel(a,b):
+    points2 = []
+    for i in range(max(len(a),len(b))):
+        if i < len(a):
+            points2.append(a[i])
+        if i < len(b):
+            points2.append(b[i])
+    return points2
+
+cockpit_floor = [(stations[0], 12,                2  ),                # 1    # floor
+                 (stations[1],  8,                widths[1]-2),        # 2
+                 (stations[2],  5.5,              widths[2]-2),        # 3
+                 (stations[3],  5.5,              widths[3]-2),        # 4
+                 (stations[4],  5.5,              widths[4]-2),        # 5
+                 # ---
+                 (stations[5], 11.0,              widths[5]-2),        # 6
+                 (stations[6], 11.0,              widths[5]-2),        # 7
+                 # ---
+                 (stations[7],  5.0,              seat_half_width),    # 8
+                 (66.0,         5.0,              seat_half_width),       
+                 (stations[8],  6.0,              seat_half_width),    # 9
+                 (72.0,         8.0,              seat_half_width),
+                 (stations[9],  8.0,              seat_half_width),    # 10
+                ]
+cockpit_sides = [(stations[0],  upper_bottom[0],   4.75),              # 1    #cockpit sill
+                 (stations[1],  upper_bottom[1],   widths[1]-1),       # 2   
+                 (stations[2],  upper_bottom[2],   widths[2]-1),       # 3   
+                 (stations[3],  upper_bottom[3],   widths[3]-1),       # 4   
+                 (stations[4],  upper_bottom[4],   widths[4]-1),       # 5   
+                 # ---
+                 (stations[5],  upper_bottom[5],   widths[5]-1),       # 6   
+                 (stations[6],  console_height,    widths[6]-1),       # 7   
+                 # ---
+                 (stations[7],  console_height-.5, seat_half_width),   # 8   
+                 (66.0,         console_height-.5, seat_half_width),       
+                 (stations[8],  console_height-.5, seat_half_width),   # 9   
+                 (72.0,         console_height-.5, seat_half_width),
+                 (stations[9],  console_height-.5, seat_half_width),   # 10   
+                 # ---
+                 (stations[7],  console_height,   seat_half_width+1),  # 8   
+                 (66.0,         console_height, seat_half_width+1),       
+                 (stations[8],  console_height,   seat_half_width+1),  # 9   
+                 (72.0,         console_height, seat_half_width+1),
+                 (stations[9], console_height,   seat_half_width+1),   # 10   
+               ]   
+for i in range(5,5+6): # 12 + 17-23                                           # add cockpit sill
+    cockpit_sides.append((stations[i],console_height,widths[i]))
+
+
+# --------------------------------------------------------
+# cockpit floor
+# --------------------------------------------------------
+floor = mirrorz(cockpit_floor)
+floor_shapes = []
+for i in range(0,len(floor)-2,2):
+    floor_shapes.append((i,i+1,i+3,i+2))
+perimeter,fold_lines = flat_box(floor, floor_shapes,[])
+print(points_to_poly(perimeter))
+#print(floor)
+#print(floor_shapes)
+
+
+
+# --------------------------------------------------------
+# cockpit sides, front
+# --------------------------------------------------------
+sides = parallel(cockpit_floor,cockpit_sides)
+sides_shapes = []
+
+for i in range(0,7*2-2,2):
+    sides_shapes.append((i,i+1,i+2))
+    sides_shapes.append((i+2,i+1,i+3))
+perimeter,fold_lines = flat_box(sides, sides_shapes,[])
+print(points_to_poly(perimeter))
+for line in fold_lines:
+    print(build_dashed_line(*line))
+
+# --------------------------------------------------------
+# cockpit sides, middle
+# --------------------------------------------------------
+sides_shapes = [ (12,12+1,12+3),
+                 (12,12+3,12+2),
+                 (15,13,24)
+                 ]
+perimeter,fold_lines = flat_box(sides, sides_shapes,[],50,0)
+print(points_to_poly(perimeter))
+for line in fold_lines:
+    print(build_dashed_line(*line))
+
+# --------------------------------------------------------
+# cockpit sides, aft
+# --------------------------------------------------------
+sides_shapes = [ (18,16,14,15,23,22,20),
+                 (23,15,24,28),
+                 (28,24,31,32,33)
+               ]
+perimeter,fold_lines = flat_box(sides, sides_shapes,[],70,0)
+print(points_to_poly(perimeter))
+for line in fold_lines:
+    print(build_dashed_line(*line))
+
+
+# 10x10x10 cube
 a = [(0,0,0),  (10,0,0),  (10,10,0),  (0,10,0),
-     (0,0,10), (10,0,10), (10,10,10), (0,10,10), (10,0,10), (10,10,10)]
+     (0,0,10), (10,0,10), (10,10,10), (0,10,10)]
 
 b = [(0,1,2,3), # top
      (1,0,4,5),
@@ -42,47 +141,36 @@ b = [(0,1,2,3), # top
      (4,7,6,5)
      ]
 
-c = [(1,1,1),(5,1,1),(5,5,1),(1,5,1)]
-d = [(0,5,1),(0,1,1),
-     (6,5,1),(6,1,1),
-     (5,6,1),(1,6,1)],
-e = [(0,1,2,3),(0,3,4,5),(2,3,7,6),(3,0,8,9)]
 
-perimeter,fold_lines = flat_box(a,b,
-                                [])
-print(points_to_poly(perimeter))
-for line in fold_lines:
-    print(build_dashed_line(*line))
+
+# this is a test for showing the side view (projection) of the fuselage.  just to make sure it's working
+#side_projection = [(stations[i],upper_top[i]) for i in range(len(stations)) if upper_top[i]] + [(stations[i],belly_bottom[i]) for i in reversed(range(len(stations))) if belly_bottom[i]]
+#print(points_to_poly(side_projection))
+
+# this is a test for the flat_box function
+#perimeter,fold_lines = flat_box(a,b,[])
+#print(points_to_poly(perimeter))
+#for line in fold_lines:
+#    print(build_dashed_line(*line))
 
 # first the top of the consoles
-for i in range(console_start,console_end+1):
-    console.append((widths[i]-(seat_width/2),stations[i]-stations[console_start]))
-for i in range(len(console)-1):
-    print(points_to_poly(make_tab(console[i],console[i+1])))
-console = [(console_edge_radius,console[0][1])] + console + [(console_edge_radius,console[-1][1])]
-print(build_dashed_line(console[0],console[-1]))
-console = [(console[0][0]-console_edge_unrolled,console[0][1])] + console + [(console[-1][0]-console_edge_unrolled,console[-1][1])]
-print(build_dashed_line(console[0],console[-1]))
+#for i in range(console_start,console_end+1):
+#    if widths[i]:
+#        console.append((widths[i]-(seat_width/2),stations[i]-stations[console_start]))
+#for i in range(len(console)-1):
+#    print(points_to_poly(make_tab(console[i],console[i+1])))
+#
+#console = [(console_edge_radius,console[0][1])] + console + [(console_edge_radius,console[-1][1])]
+#print(build_dashed_line(console[0],console[-1]))
+#console = [(console[0][0]-console_edge_unrolled,console[0][1])] + console + [(console[-1][0]-console_edge_unrolled,console[-1][1])]
+#print(build_dashed_line(console[0],console[-1]))
+#
+## console sides (your legs go between these)
+#for i in reversed(seat_bottom):
+#    console.append((console[0][0]+1.5-i[1],i[0]))
+#print(points_to_poly(console))
 
-# console sides (your legs go between these)
-for i in reversed(seat_bottom):
-    console.append((console[0][0]+1.5-i[1],i[0]))
-print(points_to_poly(console))
 
-
-first_console_cone = [{'width':             .875,
-                       'height':            console_edge_radius,
-                       'datum':             0,
-                       'horizontal_center': -.3,
-                       'vertical_center':   0,
-                       'amount':            0.25},
-                      {'width':             console_edge_radius,
-                       'height':            console_edge_radius,
-                       'datum':             10,
-                       'horizontal_center': 0,
-                       'vertical_center':   0,
-                       'amount':            0.25}]
-print(ellipses(first_console_cone))
 
 
 
@@ -108,6 +196,7 @@ for i in range((len(spine)//2)-1):
 
 
 
+fuselage = []
 for i in range(len(stations)):
 
     vertical_center   = upper_bottom[i]
@@ -148,11 +237,14 @@ uppers = ellipses([i['upper'] for i in fuselage if i['upper']['height']], 50, fl
 #5/0 
 
 # tail triangle
-da = distance((stations[15],upper_bottom[15],widths[15]),
-              (stations[18],upper_bottom[18],widths[18]))
+da = distance((stations[-4],upper_bottom[-4],widths[-4]),
+              (stations[-2],upper_bottom[-2],widths[-2]))
 
-db = distance((stations[19],upper_bottom[19],widths[19]),
-              (stations[18],upper_bottom[18],widths[18]))
+db = distance((stations[-1],upper_bottom[-1],widths[-1]),
+              (stations[-2],upper_bottom[-2],widths[-2]))
+print(da)
+print(db)
+
 print(flat_triangle(uppers[-1][0][0],uppers[-1][1][-1],da,db,'right'))
 print(flat_triangle(uppers[-1][0][-1],uppers[-1][1][0],da,db,'left'))
 
