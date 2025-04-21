@@ -1,5 +1,7 @@
 import math 
 from flat_wrap import * # general dimensions:
+import numpy as np
+import matplotlib.pyplot as plt
 
 flange_width          = .75
 seat_width            = 19
@@ -71,10 +73,10 @@ cockpit_sides = [(stations[0],  upper_bottom[0],   4.75),              # 1    #c
                  (stations[8],  console_height,   seat_half_width+1),  # 9   
                  (72.0,         console_height, seat_half_width+1),
                  (stations[9], console_height,   seat_half_width+1),   # 10   
-               ]   
-for i in range(5,5+6): # 12 + 17-23                                           # add cockpit sill
+               ]  
+cockpit_sides.append((stations[5],upper_bottom[5],widths[5]))
+for i in range(6,6+5): # 12 + 17-23                                           # add cockpit sill
     cockpit_sides.append((stations[i],console_height,widths[i]))
-
 
 # --------------------------------------------------------
 # cockpit floor
@@ -95,10 +97,12 @@ print(points_to_poly(perimeter))
 # --------------------------------------------------------
 sides = parallel(cockpit_floor,cockpit_sides)
 sides_shapes = []
-
 for i in range(0,7*2-2,2):
     sides_shapes.append((i,i+1,i+2))
     sides_shapes.append((i+2,i+1,i+3))
+sides_shapes.append((13,11,29,30))
+#print(sides)
+#5/0
 perimeter,fold_lines = flat_box(sides, sides_shapes,[])
 print(points_to_poly(perimeter))
 for line in fold_lines:
@@ -109,7 +113,8 @@ for line in fold_lines:
 # --------------------------------------------------------
 sides_shapes = [ (12,12+1,12+3),
                  (12,12+3,12+2),
-                 (15,13,24)
+                 (15,13,24),
+                 (24,13, 30,31)
                  ]
 perimeter,fold_lines = flat_box(sides, sides_shapes,[],50,0)
 print(points_to_poly(perimeter))
@@ -127,6 +132,43 @@ perimeter,fold_lines = flat_box(sides, sides_shapes,[],70,0)
 print(points_to_poly(perimeter))
 for line in fold_lines:
     print(build_dashed_line(*line))
+
+# --------------------------------------------------------
+# canopy bottom/front strip
+canopy_frame = [(20.46,22.02,0),
+                (stations[1],20.4,5.76),                     # station 2
+                (stations[2],18.54, 8.38),                   # station 3
+                (stations[3],17.52, 9.62),                   # station 4
+                (stations[4],17.29, 10.42),                  # station 5
+                (39.75,17.62,11.0),
+                (stations[5],upper_bottom[5],widths[5]),     # station 6
+                # panel
+                (42.42,26.0,6.0),
+                (42.66,24.14,7.875), 
+                (42.87,22.49,7.875),
+                (43.0,21.5,6.875),
+                # station 5
+                (stations[4],24.81,7.0),
+                (stations[4],19.0,8.625),
+                # station 4
+                (stations[3],23.34,0),
+                (stations[3],17.51,widths[4]-1)]
+
+canopy_frame = mirrorz(canopy_frame) 
+fig = plt.figure()
+ax = plt.axes(projection='3d')
+ax.scatter([i[0] for i in canopy_frame],
+           [i[1] for i in canopy_frame],
+           [i[2] for i in canopy_frame])
+plt.show()
+
+# --------------------------------------------------------
+
+
+
+
+
+
 
 
 # 10x10x10 cube

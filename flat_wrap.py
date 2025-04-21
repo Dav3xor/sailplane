@@ -157,6 +157,25 @@ def rotate(point, angle):
 print('<svg width="200in" height="200in" viewBox="0 0 200 200" viewboxxmlns="http://www.w3.org/2000/svg">')
 
 
+
+
+def quarter_round(radius,zangle=0):
+    a = []
+    for i in range(10):
+        angle = (90/10*i)*2*3.14159/360
+        x=0
+        y=math.cos(angle)*radius
+        z=math.sin(angle)*radius
+        a.append((x,y,z))
+    return a
+def rotatez(points, angle):
+    rotated = []
+    for point in points:
+        newpoint = (point[0]*math.cos(angle) - point[1]*math.sin(angle),
+                    point[0]*math.sin(angle) + point[1]*math.cos(angle),
+                    point[2])
+        rotated.append(newpoint)     
+    return rotated
 def ellipse_point(angle, e):
     x = math.sin(angle)*e['height']
     y = math.cos(angle)*e['width']
