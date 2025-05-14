@@ -370,7 +370,7 @@ def wing_skin(airfoil1, chord1, airfoil2, chord2, span, sweep, tx=0, ty=0,spanli
                 #print(f'{b[i]},{c[i]}')
                 print(points_to_line(b[i],c[-1*i - 1]))
 
-    connecting_strip(c,[],.75,3)
+    #connecting_strip(c,[],.75,3)
     # I used this to determine which parts of the 
     #print(af1_shape[50:90])
     return (af1_shape, af2_shape,a)

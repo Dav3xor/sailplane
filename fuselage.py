@@ -4,23 +4,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 flange_width          = .75
-seat_width            = 19
+seat_width            = 18
 seat_half_width       = seat_width/2.0
 console_height        = 14
-
-#console / seat bottom coordinates
-seat_bottom = (0,5),(10,11),(17.5,11),(20.5,9.5),(21.875,8.0),(31.0,8.0)
-
-
-#                 1      2       3      4      5       6       7      8       9       10      11     12       13     14      15       16      17      18,     19      20      21
-stations     = [18.0,  22.0,   26.0,  31.0,  36.0,   43.0,   48.0,  58.0,   68.0,   79.0,   84.00, 91.0,   106.0, 126.0,  146.00,  170.00, 196.0,  224.0,  246.68, 247.02, 248.33 ]
-widths       = [ 6.66,  7.89,   8.84,  9.79, 10.54,  11.34,  11.8,  12.43,  12.75,  12.83,  12.77, 12.61,  11.91,  10.40,   8.62,    6.67,   5.0,    3.64,   2.75,   2.75 ,  2.75]
-upper_top    = [20.08, 23.09,  25.52, 28.02, 30.10,  32.48,  33.86, 35.92,  37.09,  37.30,  36.97, 36.39,  35.45,  34.53,  33.84,   33.15,  32.55,  32.0,   None,    None,  31.47]
-upper_bottom = [14.0,  14.65,  15.32, 16.16, 17.00,  18.16,  19.00, 20.65,  22.32,  24.16,  25.0,  24.66,  24.01,  23.28,  22.69,   22.20,  22.0,   22.0,   None,   22.0,   30.0]
-belly_top    = [14.0,  12.57,  11.59, 10.68, 10.01,  9.35,   9.04,  8.75,   9.07,   10.32,  None,  12.38,  14.90,  17.31,  18.78,   19.70,  20,     20,     20.0,    None,  None]
-belly_bottom = [ 4.07, 3.13,    2.53,  2.02,  1.70,  1.5,    1.5,   1.87,   2.87,    4.54,  None,   6.75,   9.61,  12.46,  13.93,   15.17,  16.18,  16.97,   None,   None,  None]
-floor_level  = [14.0,  8.0,     5.5,   5.5,   5.5,  10.0,   10.0,   5.0,    5.0]    
-
 
 
 def mirrorz(points):
@@ -38,14 +24,95 @@ def parallel(a,b):
             points2.append(b[i])
     return points2
 
-cockpit_floor = [(stations[0], 12,                2  ),                # 1    # floor
-                 (stations[1],  8,                widths[1]-2),        # 2
-                 (stations[2],  5.5,              widths[2]-2),        # 3
-                 (stations[3],  5.5,              widths[3]-2),        # 4
-                 (stations[4],  5.5,              widths[4]-2),        # 5
+class Stations:
+    def __getitem__(self,key):
+        return self.get_thing(key)
+    def __contains__(self,key):
+        if key in self.stations:
+            return self.get_thing(key)
+        elif key in self.i_to_s:
+            return self.get_thing(key)
+        else:
+            return None
+    def get_thing(self, station):
+        if type(station) == float:
+            return self.stations[station]
+        else:
+            return self.stations[self.i_to_s[station]]
+    
+    def __init__(self):
+        self.stations = {}
+        self.i_to_s   = {}
+
+    def get_bulkheads(self):
+        return [key for key in self.stations if 'bulkhead_number' in self.stations[key]]
+
+    def get_upper_ellipse(self,station):
+        bulkhead          = self.get_thing(station)
+        vertical_center   = bulkhead['upper_bottom']
+        horizontal_center = 0
+        width             = bulkhead['width']
+        height            = bulkhead['upper_bottom'] - bulkhead['upper_top'] if bulkhead['upper_top'] else None
+        datum             = bulkhead['station']
+        amount            = 0.5
+        return {'vertical_center': vertical_center, 
+                'horizontal_center': horizontal_center, 
+                'width': width, 
+                'height': height, 
+                'datum': datum, 
+                'amount': 0.5}
+
+    def get_lower_ellipse(self,station): 
+        bulkhead          = self.get_thing(station)
+        vertical_center   = bulkhead['belly_top']
+        horizontal_center = 0
+        width             = bulkhead['width']
+        height            = bulkhead['belly_bottom'] - bulkhead['belly_top'] if bulkhead['belly_bottom'] else None
+        datum             = bulkhead['station']
+        amount            = 0.5
+        return {'vertical_center': vertical_center, 
+                'horizontal_center': horizontal_center, 
+                'width': width, 
+                'height': height, 
+                'datum': datum, 
+                'amount': 0.5}
+
+    def add(self, station_loc, **kwargs):
+        if 'bulkhead_number' in kwargs:
+            bulkhead_number = kwargs['bulkhead_number']
+            if bulkhead_number not in self.i_to_s:
+                self.i_to_s[bulkhead_number]=station_loc
+            else:
+                if station_loc != self.i_to_s[bulkhead_number]:
+                    print('WARNING: station numbers differ.')
+                    print(f'WARNING: station_number = {station_number}, {station_loc} != {self.i_to_s[station_number]}')
+                    5/0
+        if station_loc not in self.stations:
+            self.stations[station_loc] = {}
+        self.stations[station_loc].update(kwargs)
+
+
+# bulkheads
+#                  0       1       2      3      4       5       6      7       8       9      10     11       12     13      14       15      16      17      18,     19      20      
+stations        = [18.0,  22.0,   26.0,  31.0,  36.0,   43.0,   48.0,  58.0,   68.0,   79.0,   84.00, 91.0,   106.0, 126.0,  146.00,  170.00, 196.0,  224.0,  246.68, 247.02, 248.33 ]
+widths          = [ 6.66,  7.89,   8.84,  9.79, 10.54,  11.34,  11.8,  12.43,  12.75,  12.83,  12.77, 12.61,  11.91,  10.40,   8.62,    6.67,   5.0,    3.64,   2.75,   2.75 ,  2.75]
+upper_top       = [20.08, 23.09,  25.52, 28.02, 30.10,  32.48,  33.86, 35.92,  37.09,  37.30,  36.97, 36.39,  35.45,  34.53,  33.84,   33.15,  32.55,  32.0,   None,    None,  31.47]
+upper_bottom    = [14.0,  14.65,  15.32, 16.16, 17.00,  18.16,  19.00, 20.65,  22.32,  24.16,  25.0,  24.66,  24.01,  23.28,  22.69,   22.20,  22.0,   22.0,   None,   22.0,   30.0]
+h_split         = [None,  -1,     -1,    -1,    -1,     -1,     -1,    -1,     -1,     -1,     21.0,  21.0,   21.0,   21.0,   21.0,    21.0,   21.0,   21.0,   21.0,   21.0,   21.0]
+belly_top       = [14.0,  12.57,  11.59, 10.68, 10.01,  9.35,   9.04,  8.75,   9.07,   10.32,  None,  12.38,  14.90,  17.31,  18.78,   19.70,  20,     20,     20.0,    None,  None]
+belly_bottom    = [ 4.07, 3.13,    2.53,  2.02,  1.70,  1.5,    1.5,   1.87,   2.87,    4.54,  None,   6.75,   9.61,  12.46,  13.93,   15.17,  16.18,  16.97,   None,   None,  None]
+bulkhead_top    = [True,  False,   False, False, False, False,  False, False,  False,  False,  True,  True,   True,  True,    True,    True,   True,   True,    True,   True,  True]  
+
+
+
+cockpit_floor = [(stations[0], 12,                3  ),                # 1    # floor
+                 (stations[1],  8,                widths[1]-2.25),     # 2
+                 (stations[2],  6.0,              widths[2]-2.25),     # 3
+                 (stations[3],  6.0,              widths[3]-2.25),     # 4
+                 (stations[4],  6.0,              widths[4]-2.25),     # 5
                  # ---
-                 (stations[5], 11.0,              widths[5]-2),        # 6
-                 (stations[6], 11.0,              widths[5]-2),        # 7
+                 (stations[5], 11.0,              seat_half_width),     # 6
+                 (stations[6], 11.0,              seat_half_width),     # 7
                  # ---
                  (stations[7],  5.0,              seat_half_width),    # 8
                  (66.0,         5.0,              seat_half_width),       
@@ -53,6 +120,7 @@ cockpit_floor = [(stations[0], 12,                2  ),                # 1    # 
                  (72.0,         8.0,              seat_half_width),
                  (stations[9],  8.0,              seat_half_width),    # 10
                 ]
+
 cockpit_sides = [(stations[0],  upper_bottom[0],   4.75),              # 1    #cockpit sill
                  (stations[1],  upper_bottom[1],   widths[1]-1),       # 2   
                  (stations[2],  upper_bottom[2],   widths[2]-1),       # 3   
@@ -77,6 +145,64 @@ cockpit_sides = [(stations[0],  upper_bottom[0],   4.75),              # 1    #c
 cockpit_sides.append((stations[5],upper_bottom[5],widths[5]))
 for i in range(6,6+5): # 12 + 17-23                                           # add cockpit sill
     cockpit_sides.append((stations[i],console_height,widths[i]))
+
+
+# --------------------------------------------------------
+# build stations
+# --------------------------------------------------------
+
+s = Stations()
+
+# bulkheads
+for i in range(len(stations)):
+    station = stations[i]
+    data = {'bulkhead_number':i}
+    data['station']      = stations[i]
+    data['width']        = widths[i]
+    data['upper_top']    = upper_top[i]
+
+    if h_split[i] == -1:
+        data['h_split']  = upper_bottom[i]
+    else:
+        data['h_split']  = h_split[i]
+
+    data['upper_bottom'] = upper_bottom[i]
+    data['belly_top']    = belly_top[i]
+    data['belly_bottom'] = belly_bottom[i]
+    data['bulkhead_top']     = bulkhead_top[i]
+    s.add(station,**data)
+
+for station in cockpit_floor:
+    s.add(station[0], floor=station[1:])
+
+
+
+
+#points.append(((bulkhead['width']-1.0)*-1.0, bulkhead['sides'][-1][1]))
+#points.append(((bulkhead['width'])*-1.0, bulkhead['h_split']-.75))
+#points.append(((bulkhead['width']-.75)*-1.0, bulkhead['h_split']-.75))
+
+# cockpit (in)sides
+for i in range(1,7):
+    bulkhead = s[i]
+    s.add(cockpit_sides[i][0], sides = [(bulkhead['width'],     bulkhead['h_split']-.75),
+                                        (bulkhead['width']-.75, bulkhead['h_split']-.75),
+                                        (cockpit_floor[i][2],   cockpit_floor[i][1])])
+for i in range(7,12):
+    if cockpit_sides[i][0] in s and 'width' in s[cockpit_sides[i][0]]:
+        bulkhead = s[cockpit_sides[i][0]]
+
+        s.add(cockpit_sides[i][0], sides = [(bulkhead['width'],     cockpit_sides[i+5][1]),
+                                            (cockpit_sides[i+5][2], cockpit_sides[i+5][1]),
+                                            (cockpit_sides[i][2],   cockpit_sides[i][1]),
+                                            (cockpit_floor[i][2],   cockpit_floor[i][1])])
+#print(s.stations.keys())
+#print(s.stations)
+#print(s[1])
+#5/0
+
+
+
 
 # --------------------------------------------------------
 # cockpit floor
@@ -195,27 +321,9 @@ b = [(0,1,2,3), # top
 #for line in fold_lines:
 #    print(build_dashed_line(*line))
 
-# first the top of the consoles
-#for i in range(console_start,console_end+1):
-#    if widths[i]:
-#        console.append((widths[i]-(seat_width/2),stations[i]-stations[console_start]))
-#for i in range(len(console)-1):
-#    print(points_to_poly(make_tab(console[i],console[i+1])))
-#
-#console = [(console_edge_radius,console[0][1])] + console + [(console_edge_radius,console[-1][1])]
-#print(build_dashed_line(console[0],console[-1]))
-#console = [(console[0][0]-console_edge_unrolled,console[0][1])] + console + [(console[-1][0]-console_edge_unrolled,console[-1][1])]
-#print(build_dashed_line(console[0],console[-1]))
-#
-## console sides (your legs go between these)
-#for i in reversed(seat_bottom):
-#    console.append((console[0][0]+1.5-i[1],i[0]))
-#print(points_to_poly(console))
 
 
-
-
-
+# --------------------------------------------------------------------------------------------------------
 # spine
 spine  = [(widths[i],stations[i]) for i in range(10,len(widths)-3)] 
 spine += [(i[0]*-1,i[1]) for i in reversed(spine)]
@@ -238,45 +346,26 @@ for i in range((len(spine)//2)-1):
 
 
 
-fuselage = []
-for i in range(len(stations)):
-
-    vertical_center   = upper_bottom[i]
-    horizontal_center = 0
-    width             = widths[i]
-    height            = upper_bottom[i] - upper_top[i] if upper_top[i] else None
-    datum             = stations[i]
-    amount            = 0.5
-    upper = {'vertical_center': vertical_center, 
-             'horizontal_center': horizontal_center, 
-             'width': width, 
-             'height': height, 
-             'datum': datum, 
-             'amount': 0.5}
-
-    vertical_center   = belly_top[i]
-    horizontal_center = 0
-    width             = widths[i]
-    height            = belly_bottom[i] - belly_top[i] if belly_bottom[i] else None
-    datum             = stations[i]
-    amount            = 0.5
-    lower = {'vertical_center': vertical_center, 
-             'horizontal_center': horizontal_center, 
-             'width': width, 
-             'height': height, 
-             'datum': datum, 
-             'amount': 0.5}
-
-    fuselage.append({'upper': upper,
-                     'lower': lower})
+#fuselage = []
+#for bulkhead in s.get_bulkheads():
+#    upper = s.get_upper_ellipse(bulkhead)
+#    lower = s.get_lower_ellipse(bulkhead)
+#
+#    fuselage.append({'upper': upper,
+#                     'lower': lower})
 
 # fuselage top & bottom
-lowers = ellipses([i['lower'] for i in fuselage if i['lower']['height']], flip=False)
-uppers = ellipses([i['upper'] for i in fuselage if i['upper']['height']], 50, flip=True)
-#for i in fuselage:
-#    print (i['upper'])
-#print (uppers)
-#5/0 
+
+lowers = [s.get_lower_ellipse(i) for i in s.get_bulkheads()]
+uppers = [s.get_upper_ellipse(i) for i in s.get_bulkheads()]
+
+lowers = ellipses([i for i in lowers if i['height']],     flip=False)
+uppers = ellipses([i for i in uppers if i['height']], 50, flip=True)
+
+#lowers = ellipses([i['lower'] for i in fuselage if i['lower']['height']], flip=False)
+#uppers = ellipses([i['upper'] for i in fuselage if i['upper']['height']], 50, flip=True)
+
+
 
 # tail triangle
 da = distance((stations[-4],upper_bottom[-4],widths[-4]),
@@ -291,22 +380,23 @@ print(flat_triangle(uppers[-1][0][0],uppers[-1][1][-1],da,db,'right'))
 print(flat_triangle(uppers[-1][0][-1],uppers[-1][1][0],da,db,'left'))
 
 
-# connecting strips
+# fuselage skin connecting strips
+# --------------------------------------------------------------------------------------------------------
 for i in range(len(lowers)):
     a = lowers[i][0]
     b = lowers[i][1]
-    print(a[0])
-    print(b[-1])
-    anglea = math.atan2(a[0][0]-b[-1][0], a[0][1]-b[-1][1])
-    angleb = math.atan2(a[-1][0]-b[0][0], a[-1][1]-b[0][1])
-
-    a2 = (b[-1][0]+(flange_width*.5)*math.sin(anglea),         b[-1][1]+(flange_width*.5)*math.cos(anglea))
-    b2 = (b[0][0]+(flange_width*.5)*math.sin(angleb), b[0][1]+(flange_width*.5)*math.cos(angleb))
+    connecting_strip(a, [],
+                     flange_width, 5)
+    
+for i in range(len(uppers)):
+    a = uppers[i][0]
+    b = uppers[i][1]
     connecting_strip(a, [],
                      flange_width, 5)
     
 
-# make the fuselage flat sides.
+# make the fuselage verticalflat sides.
+# --------------------------------------------------------------------------------------------------------
 fuselage_sides = []
 
 ub2 = upper_bottom[:10] + upper_bottom[11:]
@@ -356,7 +446,8 @@ for i in range(len(ub2)-1):
 
 
 
-
+# wings
+# --------------------------------------------------------------------------------------------------------
 airfoil1 = load_airfoil('GA40-A620.dat')
 airfoil2 = load_airfoil('GA40-A618.dat')
 airfoil3 = load_airfoil('GA40-A616.dat')
@@ -439,8 +530,20 @@ build_flat_shape(vstab_middle_curve,vstab_upper_curve,tx=140,ty=-40)
 
 
 
+# horizontal tail
+# --------------------------------------------------------------------------------------------------------
+a = 25*.3
+b = 18*.3
+spanlines=[0.0,0.30142605]
+wing_skin(airfoil4, 25, airfoil4, 18, 62, a-b,tx=180,ty=-100,spanlines=spanlines)
+
+
+
+
+
 # rudder
 # the single most complicated part of this whole thing.
+# --------------------------------------------------------------------------------------------------------
 
 rudder_lower_end = [(254.57,42,0)]
 rudder_bottom_end = [(251.91,44,0)]
@@ -495,48 +598,77 @@ c=build_flat_fan((239.26,42,2.28),rudder_lower_end+rudder_middle_curve+[(241.8,2
 
 # rudder lower
 build_flat_shape(rudder_lower_end+rudder_front_lower+rudder_lower_end,
-                 rudder_bottom_end+rudder_front_bottom+rudder_bottom_end,hoffset=140,voffset=-80)
+                 rudder_bottom_end+rudder_front_bottom+rudder_bottom_end,
+                 hoffset=140,voffset=-80)
 
 print(points_to_poly(rudder_lower_end+rudder_front_lower+rudder_lower_end,
                      xindex=0,yindex=2,tx=-110,ty=-230))
 print(points_to_poly(rudder_bottom_end+rudder_front_bottom+rudder_bottom_end,
                      xindex=0,yindex=2,tx=-110,ty=-220))
-# horizontal tail
-a = 25*.3
-b = 18*.3
-wing_skin(airfoil4, 25, airfoil4, 18, 62, a-b,tx=180,ty=-100)
 
 
 
-
-
-# make bulkheads
-for i in range(len(fuselage)):
+# fuselage bulkheads
+# --------------------------------------------------------------------------------------------------------
+for i in range(len(s.get_bulkheads())):
+    bulkhead = s[i]
     tx = 110
     ty = -350+i*30
-    station = fuselage[i]
-    #points = ''
     points = [] 
-    if station['upper']['height']:
-        upper = make_ellipse(station['upper'], flip=True)
-        upper = [(i[2],i[1]) for i in upper]
+  
+    uppers = s.get_upper_ellipse(i)
+    if uppers['height']:
+        upper = make_ellipse(uppers, flip=True)
+        upper = [(j[2],j[1]) for j in upper]
         points += upper
-        connecting_strip(upper,[],flange_width, 4, tx=tx,ty=ty)
+        if bulkhead['h_split']:
+            points.append((uppers['width']*-1.0,
+                          bulkhead['h_split']))
+            points.append((uppers['width'],
+                          bulkhead['h_split']))
+            print(points_to_poly(points, tx=tx,ty=ty))
+        #connecting_strip(upper,[],flange_width, 4, tx=tx,ty=ty)
     else:
-        if station['upper']['width'] and station['upper']['vertical_center']:
-            points.append((station['upper']['width'],
-                           station['upper']['vertical_center']))
-            points.append((station['upper']['width']*-1.0,
-                           station['upper']['vertical_center']))
+        if uppers['width'] and uppers['vertical_center']:
+            points.append((uppers['width'],
+                           uppers['vertical_center']))
+            points.append((uppers['width']*-1.0,
+                           uppers['vertical_center']))
 
-    if station['lower']['height']:
-        lower = make_ellipse(station['lower'])
-        lower = [(i[2],i[1]) for i in lower]
+    lowers = s.get_lower_ellipse(i)
+    if lowers['height']:
+        lower = make_ellipse(lowers)
+        lower = [(j[2],j[1]) for j in lower]
+        if bulkhead['h_split']:
+            points = lower 
+            if 'floor' in bulkhead:
+                #points.append(((bulkhead['width']-1.0)*-1.0, bulkhead['sides'][-1][1]))
+                #points.append(((bulkhead['width'])*-1.0, bulkhead['h_split']-.75))
+                #points.append(((bulkhead['width']-.75)*-1.0, bulkhead['h_split']-.75))
+                for p in bulkhead['sides']:
+                    #points.append((p[0]*-1.0, p[1]))
+                    points.append((p[0]*-1.0, p[1]))
+
+                for p in reversed(bulkhead['sides']):
+                    #points.append(p)
+                    points.append((p[0], p[1]))
+                #points.append((bulkhead['width']-1.0, bulkhead['sides'][-1][1]))
+                #points.append((bulkhead['width']-.75, (bulkhead['h_split']-.75)))
+                #points.append(((bulkhead['width']), bulkhead['h_split']-.75))
+            else:
+                points.append((uppers['width']*-1.0,
+                              bulkhead['h_split']))
+                points.append((uppers['width'],
+                              bulkhead['h_split']))
+
+
+
+            print(points_to_poly(points, tx=tx,ty=ty))
+        #connecting_strip(lower,[],flange_width, 4, tx=tx,ty=ty)
+
+    if not bulkhead['h_split'] and points: 
         lower.reverse()
         points += lower
-        connecting_strip(lower,[],flange_width, 4, tx=tx,ty=ty)
-
-    if points:
         print(points_to_poly(points, tx=tx,ty=ty))
 
 print('</svg>')    
