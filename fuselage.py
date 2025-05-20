@@ -545,42 +545,49 @@ wing_skin(airfoil4, 25, airfoil4, 18, 62, a-b,tx=180,ty=-100,spanlines=spanlines
 # the single most complicated part of this whole thing.
 # --------------------------------------------------------------------------------------------------------
 
-rudder_lower_end = [(254.57,42,0)]
-rudder_bottom_end = [(251.91,44,0)]
+# y levels:
+rudder_y_upper    = 70
+rudder_y_middle   = 42
+rudder_y_lower    = 22
+rudder_y_bottom   = 20
+
+rudder_bottom_end = [(262.91,rudder_y_bottom,0)]
+rudder_lower_end = [(265.57,rudder_y_lower,0)]
 
 rudder_front_bottom = make_ellipse({'width':             2.163,
                                     'height':            2.163,
-                                    'datum':             239.0,
+                                    'datum':             250.0,
                                     'horizontal_center': 0,
-                                    'vertical_center':   44,
+                                    'vertical_center':   rudder_y_bottom,
                                     'amount':            0.5},
                                     numsteps=20, mode=2, flip=2)
 rudder_front_lower  = make_ellipse({'width':             2.251,
                                      'height':            2.251,
-                                     'datum':             239.26,
+                                     'datum':             250.26,
                                      'horizontal_center': 0,
-                                     'vertical_center':   42,
+                                     'vertical_center':   rudder_y_lower,
                                      'amount':            0.5},
                                      numsteps=20, mode=2, flip=2)
 rudder_front_middle  = make_ellipse({'width':             2.012,
                                      'height':            2.012,
-                                     'datum':             241.8,
+                                     'datum':             252.8,
                                      'horizontal_center': 0,
-                                     'vertical_center':   22,
+                                     'vertical_center':   rudder_y_middle,
                                      'amount':            0.5},
                                      numsteps=20, mode=2, flip=2)
 rudder_front_upper   = make_ellipse({'width':             .881,
                                      'height':            .881,
-                                     'datum':             244.93,
+                                     'datum':             255.93,
                                      'horizontal_center': 0,
-                                     'vertical_center':   -6,
+                                     'vertical_center':   rudder_y_upper,
                                      'amount':            0.5},
                                      numsteps=20, mode=2, flip=2)
 
+
 rudder_middle_curve  = vtail_base[0:46]
 rudder_upper_curve   = vtail_top[0:46]
-transform_tail(rudder_middle_curve,217.5,22)
-transform_tail(rudder_upper_curve,217.5,-6)
+transform_tail(rudder_middle_curve,228.5,rudder_y_middle)
+transform_tail(rudder_upper_curve,228.5,rudder_y_upper)
 
 rudder_middle = rudder_middle_curve + rudder_front_middle + flip_z(rudder_middle_curve)
 rudder_upper = rudder_upper_curve + rudder_front_upper + flip_z(rudder_upper_curve)
@@ -592,9 +599,9 @@ print(points_to_poly(rudder_upper,xindex=0,yindex=2,tx=-110,ty=-240))
 build_flat_shape(rudder_middle,rudder_upper,tx=130,ty=-170)
 
 # rudder middle
-a=build_flat_fan((239.26,42,2.28),rudder_lower_end+rudder_middle_curve+[(241.8,22,2.02)],tx=160,ty=-140)
+a=build_flat_fan((250.26,rudder_y_lower,2.28),rudder_lower_end+rudder_middle_curve+[(252.8,rudder_y_middle,2.02)],tx=160,ty=-140)
 b=build_flat_shape(rudder_front_lower, rudder_front_middle, start=a,tx=160,ty=-140)
-c=build_flat_fan((239.26,42,2.28),rudder_lower_end+rudder_middle_curve+[(241.8,22,2.02)],start_pivot=b[1][-1],start_point=b[2][0],reverse=True,tx=160,ty=-140)
+c=build_flat_fan((250.26,rudder_y_lower,2.28),rudder_lower_end+rudder_middle_curve+[(252.8,rudder_y_middle,2.02)],start_pivot=b[1][-1],start_point=b[2][0],reverse=True,tx=160,ty=-140)
 
 # rudder lower
 build_flat_shape(rudder_lower_end+rudder_front_lower+rudder_lower_end,
