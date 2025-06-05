@@ -93,15 +93,15 @@ class Stations:
 
 
 # bulkheads
-#                  0       1       2      3      4       5       6      7       8       9      10     11       12     13      14       15      16      17      18,     19      20      
-stations        = [18.0,  22.0,   26.0,  31.0,  36.0,   43.0,   48.0,  58.0,   68.0,   79.0,   84.00, 91.0,   106.0, 126.0,  146.00,  170.00, 196.0,  224.0,  246.68, 247.02, 248.33 ]
-widths          = [ 6.66,  7.89,   8.84,  9.79, 10.54,  11.34,  11.8,  12.43,  12.75,  12.83,  12.77, 12.61,  11.91,  10.40,   8.62,    6.67,   5.0,    3.64,   2.75,   2.75 ,  2.75]
-upper_top       = [20.08, 23.09,  25.52, 28.02, 30.10,  32.48,  33.86, 35.92,  37.09,  37.30,  36.97, 36.39,  35.45,  34.53,  33.84,   33.15,  32.55,  32.0,   None,    None,  31.47]
-upper_bottom    = [14.0,  14.65,  15.32, 16.16, 17.00,  18.16,  19.00, 20.65,  22.32,  24.16,  25.0,  24.66,  24.01,  23.28,  22.69,   22.20,  22.0,   22.0,   None,   22.0,   30.0]
-h_split         = [None,  -1,     -1,    -1,    -1,     -1,     -1,    -1,     -1,     -1,     21.0,  21.0,   21.0,   21.0,   21.0,    21.0,   21.0,   21.0,   21.0,   21.0,   21.0]
-belly_top       = [14.0,  12.57,  11.59, 10.68, 10.01,  9.35,   9.04,  8.75,   9.07,   10.32,  None,  12.38,  14.90,  17.31,  18.78,   19.70,  20,     20,     20.0,    None,  None]
-belly_bottom    = [ 4.07, 3.13,    2.53,  2.02,  1.70,  1.5,    1.5,   1.87,   2.87,    4.54,  None,   6.75,   9.61,  12.46,  13.93,   15.17,  16.18,  16.97,   None,   None,  None]
-bulkhead_top    = [True,  False,   False, False, False, False,  False, False,  False,  False,  True,  True,   True,  True,    True,    True,   True,   True,    True,   True,  True]  
+#                  0       1       2      3      4       5       6      7       8       9      10     11       12     13      14       15      16      17      18,     19      20      21 
+stations        = [18.0,  22.0,   26.0,  31.0,  36.0,   43.0,  48.0,  58.0,  68.0,  79.0,  84.00, 91.0,  106.0, 126.0,  146.00, 170.00, 196.0,  224.0, 246.38,  246.68, 247.02, 248.33 ]
+widths          = [ 6.66,  7.89,   8.84,  9.79, 10.54,  11.34, 11.8,  12.43, 12.75, 12.83, 12.77, 12.61, 11.91,  10.40,   8.62,   6.67,   5.0,    3.64,  2.75,   2.75,  2.75 ,   2.75]
+upper_top       = [20.08, 23.09,  25.52, 28.02, 30.10,  32.48, 33.86, 35.92, 37.09, 37.30, 36.97, 36.39, 35.45,  34.53,  33.84,  33.15,  32.55,  32.0,   None,  None,   None,   31.47]
+upper_bottom    = [14.0,  14.65,  15.32, 16.16, 17.00,  18.16, 19.00, 20.65, 22.32, 24.16, 25.0,  24.66, 24.01,  23.28,  22.69,  22.20,  22.0,   22.0,   None,  None,   22.0,   30.0]
+h_split         = [None,  -1,     -1,    -1,    -1,     -1,    -1,    -1,    -1,    -1,    21.0,  21.0,  21.0,   21.0,   21.0,   21.0,   21.0,   21.0,   21.0,  21.0,   21.0,   21.0]
+belly_top       = [14.0,  12.57,  11.59, 10.68, 10.01,  9.35,  9.04,  8.75,  9.07,  10.32, None,  12.38, 14.90,  17.31,  18.78,  19.70,  20,     20,     20.0,  20.0,   None,  None]
+belly_bottom    = [ 4.07, 3.13,    2.53,  2.02,  1.70,  1.5,   1.5,   1.87,  2.87,   4.54, None,   6.75,  9.61,  12.46,  13.93,  15.17,  16.18,  17.0,   18.24, None,   None,  None]
+bulkhead_top    = [True,  False,   False, False, False, False, False, False, False, False, True,  True,  True,  True,    True,   True,   True,   True,    True, True,   True,  True]  
 
 
 
@@ -286,7 +286,7 @@ ax = plt.axes(projection='3d')
 ax.scatter([i[0] for i in canopy_frame],
            [i[1] for i in canopy_frame],
            [i[2] for i in canopy_frame])
-plt.show()
+#plt.show()
 
 # --------------------------------------------------------
 
@@ -367,17 +367,49 @@ uppers = ellipses([i for i in uppers if i['height']], 50, flip=True)
 
 
 
-# tail triangle
-da = distance((stations[-4],upper_bottom[-4],widths[-4]),
+# tail top triangle
+da = distance((stations[-5],upper_bottom[-5],widths[-5]),
               (stations[-2],upper_bottom[-2],widths[-2]))
 
 db = distance((stations[-1],upper_bottom[-1],widths[-1]),
               (stations[-2],upper_bottom[-2],widths[-2]))
+
 print(da)
 print(db)
 
-print(flat_triangle(uppers[-1][0][0],uppers[-1][1][-1],da,db,'right'))
-print(flat_triangle(uppers[-1][0][-1],uppers[-1][1][0],da,db,'left'))
+print(points_to_poly(flat_triangle(uppers[-1][0][0],uppers[-1][1][-1],da,db,'right')))
+print(points_to_poly(flat_triangle(uppers[-1][0][-1],uppers[-1][1][0],da,db,'left')))
+
+
+# tail bottom
+tail_ellipse          = make_ellipse(s.get_lower_ellipse(224.0),
+                                     numsteps=99)
+tail_ellipse_positive = tail_ellipse[:50]
+tail_ellipse_negative = tail_ellipse[49:]
+
+#tail bottom triangle
+a = (stations[-5],belly_bottom[-5],0)
+b = (stations[-4],belly_bottom[-4],widths[-4])
+c = (stations[-4],belly_bottom[-4],widths[-4]*-1)
+d = (stations[-3],belly_top[-3],widths[-3])
+e = (stations[-3],belly_top[-3],widths[-3]*-1)
+f = (stations[-5],belly_top[-5],widths[-5])
+g = (stations[-5],belly_top[-5],widths[-5]*-1)
+
+positive_side   = build_flat_fan(b,tail_ellipse_positive,tx=10,ty=-265)
+bottom_triangle = flat_triangle(positive_side[-2],positive_side[-1],distance(a,c),distance(b,c),side='right')
+negative_side   = build_flat_fan(c,tail_ellipse_negative,start_pivot=bottom_triangle[-1],start_point=bottom_triangle[0],tx=10,ty=-265)
+
+positive_vertical = flat_triangle(positive_side[0],positive_side[-1],distance(f,d),distance(b,d))
+negative_vertical = flat_triangle(negative_side[-2],negative_side[-1],distance(g,e),distance(c,e),side='right')
+
+
+
+print(points_to_poly(positive_vertical,tx=10,ty=-265))
+print(points_to_poly(bottom_triangle,tx=10,ty=-265))
+print(points_to_poly(negative_vertical,tx=10,ty=-265))
+
+
 
 
 # fuselage skin connecting strips
@@ -491,7 +523,27 @@ wing_spar(chord_c,chord_d,90,a616_spar_extents,a616_spar_extents,tx=-180,ty=-250
 
 
 
+# horizontal tail
+# --------------------------------------------------------------------------------------------------------
+a = 25*.3
+b = 18*.3
+spanlines=[0.0,0.30142605]
+wing_skin(airfoil4, 25, airfoil4, 18, 62, a-b,tx=180,ty=-100,spanlines=spanlines)
+wing_spar(25,18,62,[-0.05963690,0.05963690],[-0.05963690,0.05963690],tx=180,ty=-100)
+
+
+
+
+# vertical stabilizer
+# --------------------------------------------------------------------------------------------------------
 #vtail_curve = wing_skin(airfoil4, 42.65, airfoil4, 17.625, 28, 18.5)[0][50:90]
+
+# y levels:
+rudder_y_upper    = 70
+rudder_y_middle   = 42
+rudder_y_lower    = 22
+rudder_y_bottom   = 20
+
 vtail_base,vtail_top,vtail_skin = wing_skin(airfoil4, 42.65, airfoil4, 17.625, 28, 18.5, tx=180,ty=-200)
 vstab_lower_curve  = vtail_base[47:90]
 vstab_middle_curve = vtail_base[50:-50]
@@ -506,37 +558,25 @@ def transform_tail(coords, transx, y):
 def flip_z(coords):
     return [(i[0],i[1],i[2]*-1.0) for i in reversed(coords)]
 
-transform_tail(vstab_lower_curve, 217.5, 22)
-transform_tail(vstab_middle_curve, 217.5, 22)
-transform_tail(vstab_upper_curve, 217.5, -6)
+transform_tail(vstab_lower_curve, 228.5, rudder_y_middle)
+transform_tail(vstab_middle_curve, 228.5, rudder_y_middle)
+transform_tail(vstab_upper_curve, 228.5, rudder_y_upper)
 
-vstab_lower_curve.insert(0,(241.24,22,2.06)) # aft top
-#vstab_lower_curve.insert(0,(236.01,42,2.75)) # aft bottom
+vstab_lower_curve.insert(0,(252.24,rudder_y_middle,2.06)) # aft top
 
 
-vstab_lower_curve.insert(0,(238.61,42,2.37))
+vstab_lower_curve.insert(0,(249.61,rudder_y_lower,2.37))
 
-vstab_middle_curve.insert(0,(241.24, 22,  2.06))
-vstab_middle_curve.append(  (241.24, 22, -2.06))
+vstab_middle_curve.insert(0,(252.24, rudder_y_middle,  2.06))
+vstab_middle_curve.append(  (252.24, rudder_y_middle, -2.06))
 
-vstab_upper_curve.insert(0,(244.93,-6,.91))
-vstab_upper_curve.append(  (244.93,-6,-.91))
+vstab_upper_curve.insert(0,(255.93,rudder_y_upper,.91))
+vstab_upper_curve.append(  (255.93,rudder_y_upper,-.91))
 
 # lower vertical stabilizer
-build_flat_fan((213,42,4.6),vstab_lower_curve, tx=160, ty=-20)
+build_flat_fan((stations[-5],rudder_y_lower,widths[-5]),vstab_lower_curve, tx=160, ty=-20)
 # upper vertical stabilizer
 build_flat_shape(vstab_middle_curve,vstab_upper_curve,tx=140,ty=-40)
-
-
-
-
-# horizontal tail
-# --------------------------------------------------------------------------------------------------------
-a = 25*.3
-b = 18*.3
-spanlines=[0.0,0.30142605]
-wing_skin(airfoil4, 25, airfoil4, 18, 62, a-b,tx=180,ty=-100,spanlines=spanlines)
-
 
 
 
@@ -545,11 +585,6 @@ wing_skin(airfoil4, 25, airfoil4, 18, 62, a-b,tx=180,ty=-100,spanlines=spanlines
 # the single most complicated part of this whole thing.
 # --------------------------------------------------------------------------------------------------------
 
-# y levels:
-rudder_y_upper    = 70
-rudder_y_middle   = 42
-rudder_y_lower    = 22
-rudder_y_bottom   = 20
 
 rudder_bottom_end = [(262.91,rudder_y_bottom,0)]
 rudder_lower_end = [(265.57,rudder_y_lower,0)]
@@ -582,6 +617,21 @@ rudder_front_upper   = make_ellipse({'width':             .881,
                                      'vertical_center':   rudder_y_upper,
                                      'amount':            0.5},
                                      numsteps=20, mode=2, flip=2)
+# rudder post
+post_points = [(stations[-3],rudder_y_bottom,widths[-3]),
+               (stations[-3],rudder_y_bottom,widths[-3]*-1),
+               (stations[-2],rudder_y_lower,widths[-2]),
+               (stations[-2],rudder_y_lower,widths[-2]*-1),
+               (250.32, rudder_y_middle, 2.2),
+               (250.32, rudder_y_middle, -2.2),
+               (254.95, rudder_y_upper, .95),
+               (254.95, rudder_y_upper, -.95)]
+post_polys = [(0,1,3,2),
+              (2,3,5,4),
+              (4,5,7,6)]
+
+perimeter,fold_lines = flat_box(post_points, post_polys,[])
+print(points_to_poly(perimeter))
 
 
 rudder_middle_curve  = vtail_base[0:46]

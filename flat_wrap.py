@@ -82,20 +82,7 @@ def get_intersections(p1, r1, p2, r2):
         rx = -(p2[1] - p1[1]) * (h/d)
         ry = -(p2[0] - p1[0]) * (h / d)
         return ((x0+rx, y0-ry), (x0-rx, y0+ry))
-        """
-        a=(r1**2-r2**2+d**2)/(2*d)
-        h=math.sqrt(r1**2-a**2)
 
-        p3 = ( p1[0]+a*(p2[0]-p1[0])/d,
-               p1[1]+a*(p2[1]-p1[1])/d )
-
-        p4 = ( p3[0]+h*(p2[1]-p1[1])/d,
-               p3[1]-h*(p2[0]-p1[0])/d )
-
-        p5 = ( p3[0]-h*(p2[1]-p1[1])/d,
-               p3[1]+h*(p2[0]-p1[0])/d )
-        return (p4,p5)
-        """
 def isleft(a, b, c):
   return (b[0] - a[0])*(c[1] - a[1]) - (b[1] - a[1])*(c[0] - a[0]) > 0;
   return (b.x - a.x)*(c.y - a.y) - (b.y - a.y)*(c.x - a.x) > 0;
@@ -106,7 +93,7 @@ def find_pointl(a,b,A,B):
         return points[0] if isleft(a,b,points[0]) else points[1]
     else:
         print("?")
-        exit(0)
+        5/0
 
 def find_pointr(a,b,A,B):
     points = get_intersections(a,A,b,B)
@@ -114,7 +101,7 @@ def find_pointr(a,b,A,B):
         return points[1] if isleft(a,b,points[0]) else points[0]
     else:
         print("?")
-        exit(0)
+        5/0
 
 
 
@@ -393,18 +380,20 @@ def wing_spar(chord_a,chord_b,span,extents_a, extents_b,tx=0,ty=0):
 def wing_rib(airfoil, chord):
     print(points_to_poly(expand_airfoil(airfoil,chord,0,0)))
 
+# this keeps the first two points, and triangulates the third, returns
+# svg (I need to change this)
 def flat_triangle(pa,pb,d1,d2,side='left'):
-    poly = ''
-    poly += f'{pa[0]},{pa[1]} \n'
-    poly += f'{pb[0]},{pb[1]} \n'
+    poly = []
+    poly.append(pa)
+    poly.append(pb)
     pc = find_pointl(pa,pb,d1,d2) if side == 'left' else find_pointr(pa,pb,d1,d2)
-    poly += f'{pc[0]},{pc[1]} \n'
-    return f'<polygon stroke-width="0.1" fill="none" stroke="black" points="{poly}" />'
+    poly.append(pc)
+    return poly
 
 def build_dashed_line(a,b):
     return f'<line stroke-width="0.1" stroke="blue" stroke-dasharray="0.5, 0.5" x1="{a[0]}" y1="{a[1]}" x2="{b[0]}" y2="{b[1]}"></line>'
 
-def build_flat_fan(pivot, fan, start_pivot=(0,0), start_point=None, reverse=False, tx=0,ty=0):
+def build_flat_fan(pivot, fan, start_pivot=(0,0), start_point=None, reverse=False, tx=0,ty=0,direction='left'):
     flattened = []
     if reverse:
         fan.reverse()
@@ -416,16 +405,29 @@ def build_flat_fan(pivot, fan, start_pivot=(0,0), start_point=None, reverse=Fals
     for step in range(1,len(fan)):
         d     = distance(fan[step],fan[step-1])
         slant = distance(pivot,fan[step])
-        print(f"---\n{flattened}")
-        print(f'd={d} slant={slant} step={step} base = {distance((0,0),flattened[-1])}')
+        #print(f"---\n{flattened}")
+        #print(f'd={d} slant={slant} step={step} base = {distance((0,0),flattened[-1])}')
         # -- flatspace
 
-        newp = find_pointl(start_pivot, flattened[-1],slant,d)
+        if direction == 'left':
+            newp = find_pointl(start_pivot, flattened[-1],slant,d)
+        else:
+            newp = find_pointr(start_pivot, flattened[-1],slant,d)
+
         flattened.append(newp)
     flattened.append(start_pivot)
     print(points_to_poly(flattened,tx=tx,ty=ty))
     return flattened
-    
+
+#takes a triangle in any orientation in 3d, makes a 2d flattened equivalent.  I hope.
+def build_2d_triangle(a,b,c):
+    a2 = (0,0)
+    b2 = (0,distance(a,b))
+    c2 = find_pointl(a2,b2,distance(a,c),distance(b,c))
+    return (a2,b2,c2)
+
+# builds a flat shape from 2 lists of points -- fuselage skin sections, wing
+# skin sections, etc...
 def build_flat_shape(a,b, voffset=0, hoffset=0, start=None, tx=0, ty=0):
     #print(a)
     #print(b)
