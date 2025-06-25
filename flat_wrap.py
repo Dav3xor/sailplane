@@ -233,19 +233,35 @@ def ellipses(ellipses, hoffset=0, numsteps = 100, flip=False):
     for i in range(len(ellipses)-1):
         a = ellipses[i]['points'].copy()
         b = ellipses[i+1]['points'].copy()
-        #a = adjust_ellipse(b,a,ellipses[i+1],ellipses[i],numsteps=numsteps)
-        #b = adjust_ellipse(a,b,ellipses[i],ellipses[i+1],numsteps=numsteps)
         translate_poly(a, ellipses[i]['datum'], ellipses[i]['vertical_center'], ellipses[i]['horizontal_center'])
         translate_poly(b, ellipses[i+1]['datum'], ellipses[i+1]['vertical_center'], ellipses[i+1]['horizontal_center'])
-        #print("+++")
-        #print(a)
-        #print(b)
-        #print("+++")
-        voffset,a,b = build_flat_shape(a,
-                                       b,
-                                       voffset, hoffset)
+
+        a1 = (ellipses[i]['datum'], ellipses[i]['skin_split'], ellipses[i]['width'])
+        a2 = (ellipses[i]['datum'], ellipses[i]['skin_split'], ellipses[i]['width']*-1)
+        b1 = (ellipses[i+1]['datum'], ellipses[i+1]['skin_split'], ellipses[i+1]['width'])
+        b2 = (ellipses[i+1]['datum'], ellipses[i+1]['skin_split'], ellipses[i+1]['width']*-1)
+        
+        if ellipses[i]['skin_split'] and ellipses[i+1]['skin_split']:
+            if a1[1] != a[0][1] and b1[1] != b[0][1]:
+                a = [a1] + a + [a2]
+                b = [b1] + b + [b2]
+
+        voffset,a_flat,b_flat = build_flat_shape(a,
+                                                 b,
+                                                 voffset, hoffset)
+        # I only have triangles start with one point, going to two, ymmv for other designs --
+        if ((not ellipses[i]['skin_split']) or (a1 == a[0])) and (ellipses[i+1]['skin_split']) and (b[0] != b1):
+            print(a[0])
+            print(b[0])
+            print(b1)
+            d1 = distance(a[0],b1)
+            d2 = distance(b[0],b1)
+            p1 = find_pointr(a_flat[0],b_flat[-1],d1,d2)
+            p2 = find_pointl(a_flat[-1],b_flat[0],d1,d2)
+            b_flat = [p2] + b_flat + [p1]
+        print(points_to_poly(a_flat+b_flat))
         voffset-=2
-        results.append((a,b))        
+        results.append((a_flat,b_flat))        
     return results
 
 def make_tab(a,b,width=.75,tilt=.2):
@@ -349,7 +365,7 @@ def wing_skin(airfoil1, chord1, airfoil2, chord2, span, sweep, tx=0, ty=0,spanli
     print(points_to_poly(af2_shape,tx=tx,ty=ty-10))
 
     a,b,c = build_flat_shape(af1_shape, af2_shape, voffset=ty, hoffset=tx)
-
+    print(points_to_poly(b+c))
     for line in spanlines:
         for i in range(len(airfoil1)):
             if line == airfoil1[i][0]:
@@ -457,14 +473,8 @@ def build_flat_shape(a,b, voffset=0, hoffset=0, start=None, tx=0, ty=0):
         slant1 = distance(b[step-1],a[step])
         slant2 = distance(a[step-1],b[step])
 
-        #print(f'd1{d1} d2{d2} slant1{slant1} slant2{slant2} a{flattened_a[-1]} b{flattened_b[-1]}')
-        #new_a = find_pointl(flattened_a[-1], flattened_b[-1], d1, slant1)
-        #new_b = find_pointr(flattened_b[-1], flattened_a[-1], d2, slant2)
-        #new_a = find_pointl(flattened_b[-1], flattened_a[-1], slant1, d1)
         new_a = find_pointl(flattened_a[-1], flattened_b[-1], d1, slant1)
         new_b = find_pointl(new_a, flattened_a[-1], base2, slant2)
-        #new_b = find_pointl(new_a, flattened_b[-1], slant1, d2)
-        #new_b = find_pointl(new_a, flattened_b[-1], base2, d2)
         
         flattened_a.append(new_a)
         flattened_b.append(new_b)
@@ -476,7 +486,7 @@ def build_flat_shape(a,b, voffset=0, hoffset=0, start=None, tx=0, ty=0):
     # beginning.
     flattened_b.reverse()
     
-    print(points_to_poly(flattened_a+flattened_b, tx=tx, ty=ty))
+    #print(points_to_poly(flattened_a+flattened_b, tx=tx, ty=ty))
     
     return ((height*-1.0)+voffset, flattened_a, flattened_b)
     #return (height*-1.0)+voffset

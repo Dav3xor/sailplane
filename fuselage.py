@@ -55,11 +55,13 @@ class Stations:
         height            = bulkhead['upper_bottom'] - bulkhead['upper_top'] if bulkhead['upper_top'] else None
         datum             = bulkhead['station']
         amount            = 0.5
+        skin_split        = bulkhead['skin_split']
         return {'vertical_center': vertical_center, 
                 'horizontal_center': horizontal_center, 
                 'width': width, 
                 'height': height, 
                 'datum': datum, 
+                'skin_split': skin_split,
                 'amount': 0.5}
 
     def get_lower_ellipse(self,station): 
@@ -70,11 +72,13 @@ class Stations:
         height            = bulkhead['belly_bottom'] - bulkhead['belly_top'] if bulkhead['belly_bottom'] else None
         datum             = bulkhead['station']
         amount            = 0.5
+        skin_split        = bulkhead['skin_split']
         return {'vertical_center': vertical_center, 
                 'horizontal_center': horizontal_center, 
                 'width': width, 
                 'height': height, 
                 'datum': datum, 
+                'skin_split': skin_split,
                 'amount': 0.5}
 
     def add(self, station_loc, **kwargs):
@@ -94,14 +98,15 @@ class Stations:
 
 # bulkheads
 #                  0       1       2      3      4       5       6      7       8       9      10     11       12     13      14       15      16      17      18,     19      20      21 
-stations        = [18.0,  22.0,   26.0,  31.0,  36.0,   43.0,  48.0,  58.0,  68.0,  79.0,  84.00, 91.0,  106.0, 126.0,  146.00, 170.00, 196.0,  224.0, 246.38,  246.68, 247.02, 248.33 ]
-widths          = [ 6.66,  7.89,   8.84,  9.79, 10.54,  11.34, 11.8,  12.43, 12.75, 12.83, 12.77, 12.61, 11.91,  10.40,   8.62,   6.67,   5.0,    3.64,  2.75,   2.75,  2.75 ,   2.75]
-upper_top       = [20.08, 23.09,  25.52, 28.02, 30.10,  32.48, 33.86, 35.92, 37.09, 37.30, 36.97, 36.39, 35.45,  34.53,  33.84,  33.15,  32.55,  32.0,   None,  None,   None,   31.47]
-upper_bottom    = [14.0,  14.65,  15.32, 16.16, 17.00,  18.16, 19.00, 20.65, 22.32, 24.16, 25.0,  24.66, 24.01,  23.28,  22.69,  22.20,  22.0,   22.0,   None,  None,   22.0,   30.0]
-h_split         = [None,  -1,     -1,    -1,    -1,     -1,    -1,    -1,    -1,    -1,    21.0,  21.0,  21.0,   21.0,   21.0,   21.0,   21.0,   21.0,   21.0,  21.0,   21.0,   21.0]
-belly_top       = [14.0,  12.57,  11.59, 10.68, 10.01,  9.35,  9.04,  8.75,  9.07,  10.32, None,  12.38, 14.90,  17.31,  18.78,  19.70,  20,     20,     20.0,  20.0,   None,  None]
-belly_bottom    = [ 4.07, 3.13,    2.53,  2.02,  1.70,  1.5,   1.5,   1.87,  2.87,   4.54, None,   6.75,  9.61,  12.46,  13.93,  15.17,  16.18,  17.0,   18.24, None,   None,  None]
-bulkhead_top    = [True,  False,   False, False, False, False, False, False, False, False, True,  True,  True,  True,    True,   True,   True,   True,    True, True,   True,  True]  
+stations        = [18.0,  22.0,   26.0,  31.0,  36.0,   43.0,  48.0,  58.0,  68.0,  79.0,  84.00, 91.0,  106.0, 126.0,  146.00, 170.00, 196.0,  224.0, 246.38, 246.68, 247.02, 248.33 ]
+widths          = [ 6.66,  7.89,   8.84,  9.79, 10.54,  11.34, 11.8,  12.43, 12.75, 12.83, 12.77, 12.61, 11.91,  10.40,   8.62,   6.67,   5.0,    3.64,  2.75,   2.75,   2.75 ,  2.75]
+upper_top       = [20.08, 23.09,  25.52, 28.02, 30.10,  32.48, 33.86, 35.92, 37.09, 37.30, 36.97, 36.39, 35.45,  34.53,  33.84,  33.15,  32.55,  32.0,   None,  None,    None,  31.47]
+upper_bottom    = [14.0,  14.65,  15.32, 16.16, 17.00,  18.16, 19.00, 20.65, 22.32, 24.16, 25.0,  24.66, 24.01,  23.28,  22.69,  22.20,  22.0,   22.0,   22.0,  22.0,   22.0,   30.0]
+skin_split      = [None,  -1,     -1,    -1,    -1,     -1,    -1,    -1,    -1,    -1,    21.0,  21.0,  21.0,   21.0,   21.0,   21.0,   21.0,   21.0,   None,  None,   None,   None]
+bulkhead_split  = [None,  -1,     -1,    -1,    -1,     -1,    -1,    -1,    -1,    -1,    20.0,  20.0,  20.0,   20.0,   20.0,   20.0,   20.0,   20.0,   20.0,  20.0,   20.0,   20.0]
+belly_top       = [14.0,  12.57,  11.59, 10.68, 10.01,  9.35,  9.04,  8.75,  9.07,  10.32, None,  12.38, 14.90,  17.31,  18.78,  19.70,  20,     20,     20.0,  20.0,   20.0,   20.0]
+belly_bottom    = [ 4.07, 3.13,    2.53,  2.02,  1.70,  1.5,   1.5,   1.87,  2.87,   4.54, None,   6.75,  9.61,  12.46,  13.93,  15.17,  16.18,  17.0,   18.24, None,   None,   None]
+bulkhead_top    = [True,  False,   False, False, False, False, False, False, False, False, True,  True,  True,  True,    True,   True,   True,   True,    True, True,   True,   True]  
 
 
 
@@ -161,10 +166,15 @@ for i in range(len(stations)):
     data['width']        = widths[i]
     data['upper_top']    = upper_top[i]
 
-    if h_split[i] == -1:
-        data['h_split']  = upper_bottom[i]
+    if bulkhead_split[i] == -1:
+        data['bulkhead_split']  = upper_bottom[i]
     else:
-        data['h_split']  = h_split[i]
+        data['bulkhead_split']  = bulkhead_split[i]
+    
+    if skin_split[i] == -1:
+        data['skin_split']  = upper_bottom[i]
+    else:
+        data['skin_split']  = skin_split[i]
 
     data['upper_bottom'] = upper_bottom[i]
     data['belly_top']    = belly_top[i]
@@ -178,15 +188,12 @@ for station in cockpit_floor:
 
 
 
-#points.append(((bulkhead['width']-1.0)*-1.0, bulkhead['sides'][-1][1]))
-#points.append(((bulkhead['width'])*-1.0, bulkhead['h_split']-.75))
-#points.append(((bulkhead['width']-.75)*-1.0, bulkhead['h_split']-.75))
 
 # cockpit (in)sides
 for i in range(1,7):
     bulkhead = s[i]
-    s.add(cockpit_sides[i][0], sides = [(bulkhead['width'],     bulkhead['h_split']-.75),
-                                        (bulkhead['width']-.75, bulkhead['h_split']-.75),
+    s.add(cockpit_sides[i][0], sides = [(bulkhead['width'],     bulkhead['bulkhead_split']-.75),
+                                        (bulkhead['width']-.75, bulkhead['bulkhead_split']-.75),
                                         (cockpit_floor[i][2],   cockpit_floor[i][1])])
 for i in range(7,12):
     if cockpit_sides[i][0] in s and 'width' in s[cockpit_sides[i][0]]:
@@ -343,7 +350,7 @@ for i in range((len(spine)//2)-1):
 
 
 # --------------------------------------------------------------------------------------------------------
-
+# fuselage skin
 
 
 #fuselage = []
@@ -361,9 +368,6 @@ uppers = [s.get_upper_ellipse(i) for i in s.get_bulkheads()]
 
 lowers = ellipses([i for i in lowers if i['height']],     flip=False)
 uppers = ellipses([i for i in uppers if i['height']], 50, flip=True)
-
-#lowers = ellipses([i['lower'] for i in fuselage if i['lower']['height']], flip=False)
-#uppers = ellipses([i['upper'] for i in fuselage if i['upper']['height']], 50, flip=True)
 
 
 
@@ -411,7 +415,6 @@ print(points_to_poly(negative_vertical,tx=10,ty=-265))
 
 
 
-
 # fuselage skin connecting strips
 # --------------------------------------------------------------------------------------------------------
 for i in range(len(lowers)):
@@ -425,9 +428,8 @@ for i in range(len(uppers)):
     b = uppers[i][1]
     connecting_strip(a, [],
                      flange_width, 5)
-    
 
-# make the fuselage verticalflat sides.
+# make the fuselage vertical/flat sides.
 # --------------------------------------------------------------------------------------------------------
 fuselage_sides = []
 
@@ -437,44 +439,23 @@ st2 = stations[:10] + stations[11:]
 wd2 = widths[:10] + widths[11:]
 
 old_width = 0.0
-for i in range(len(ub2)-1):
-    points = ''
-    width = distance((st2[i], wd2[i]), 
-                     (st2[i+1], wd2[i+1]))
-    a = (ub2[i],   old_width,   wd2[i])
-    b = (bt2[i],   old_width,   wd2[i])
-    c = (ub2[i+1], old_width+width, wd2[i+1])
-    d = (bt2[i+1], old_width+width, wd2[i+1])
 
+side_points = []
+side_faces = []
 
-    # full projected sides
-    if c[0] and d[0]:
-        points = [a,b,
-                  (d[0],b[1]+width),
-                  (c[0],a[1]+width)]
-        print(points_to_poly(points,tx=-66,ty=-230))
-
-
-
-    if (not a[0]) or (not b[0]) or (not c[0]):
+j=0
+for i in range(len(ub2)):
+    if ub2[i]==None or bt2[i]==None:
         continue
-    # sides minus half connecting strip width
-    points = [a, (b[0]-flange_width,b[1]),
-              (d[0]-flange_width,b[1]+width),
-              (c[0],a[1]+width)]
-    print(points_to_poly(points,tx=-66,ty=-230))
-
-
-    # connecting strip...
-    if d[0] and c[0]:
-        points = [(b[0]-flange_width*2,b[1]),
-                  (b[0],b[1]),
-
-                  (d[0],a[1]+width),
-                  (d[0]-flange_width*2,a[1]+width)]
-        print(points_to_poly(points,tx=-66,ty=-230))
-    old_width += width
-
+    side_points.append((st2[i],ub2[i],wd2[i]))
+    side_points.append((st2[i],bt2[i],wd2[i]))
+    side_faces.append((j*2,j*2+1,j*2+3,j*2+2))
+    j+=1
+print(side_points)
+print(side_faces)
+side_faces = side_faces[2:-4]
+perimeter,fold_lines = flat_box(side_points, side_faces,[])
+print(points_to_poly(perimeter))
 
 
 
@@ -536,13 +517,13 @@ wing_spar(25,18,62,[-0.05963690,0.05963690],[-0.05963690,0.05963690],tx=180,ty=-
 
 # vertical stabilizer
 # --------------------------------------------------------------------------------------------------------
-#vtail_curve = wing_skin(airfoil4, 42.65, airfoil4, 17.625, 28, 18.5)[0][50:90]
 
 # y levels:
-rudder_y_upper    = 70
-rudder_y_middle   = 42
-rudder_y_lower    = 22
-rudder_y_bottom   = 20
+rudder_y_upper     = 70
+rudder_y_middle    = 42
+rudder_y_lower     = 22
+rudder_y_bottom    = 20
+rudder_y_bottomest = 18.25
 
 vtail_base,vtail_top,vtail_skin = wing_skin(airfoil4, 42.65, airfoil4, 17.625, 28, 18.5, tx=180,ty=-200)
 vstab_lower_curve  = vtail_base[47:90]
@@ -576,8 +557,8 @@ vstab_upper_curve.append(  (255.93,rudder_y_upper,-.91))
 # lower vertical stabilizer
 build_flat_fan((stations[-5],rudder_y_lower,widths[-5]),vstab_lower_curve, tx=160, ty=-20)
 # upper vertical stabilizer
-build_flat_shape(vstab_middle_curve,vstab_upper_curve,tx=140,ty=-40)
-
+hoff,a,b = build_flat_shape(vstab_middle_curve,vstab_upper_curve,tx=140,ty=-40)
+print(points_to_poly(a+b,tx=140,ty=-40))
 
 
 
@@ -589,8 +570,8 @@ build_flat_shape(vstab_middle_curve,vstab_upper_curve,tx=140,ty=-40)
 rudder_bottom_end = [(262.91,rudder_y_bottom,0)]
 rudder_lower_end = [(265.57,rudder_y_lower,0)]
 
-rudder_front_bottom = make_ellipse({'width':             2.163,
-                                    'height':            2.163,
+rudder_front_bottom = make_ellipse({'width':             2.251,
+                                    'height':            2.251,
                                     'datum':             250.0,
                                     'horizontal_center': 0,
                                     'vertical_center':   rudder_y_bottom,
@@ -618,7 +599,9 @@ rudder_front_upper   = make_ellipse({'width':             .881,
                                      'amount':            0.5},
                                      numsteps=20, mode=2, flip=2)
 # rudder post
-post_points = [(stations[-3],rudder_y_bottom,widths[-3]),
+post_points = [(stations[-4],rudder_y_bottomest,widths[-4]),
+               (stations[-4],rudder_y_bottomest,widths[-4]*-1),
+               (stations[-3],rudder_y_bottom,widths[-3]),
                (stations[-3],rudder_y_bottom,widths[-3]*-1),
                (stations[-2],rudder_y_lower,widths[-2]),
                (stations[-2],rudder_y_lower,widths[-2]*-1),
@@ -628,7 +611,8 @@ post_points = [(stations[-3],rudder_y_bottom,widths[-3]),
                (254.95, rudder_y_upper, -.95)]
 post_polys = [(0,1,3,2),
               (2,3,5,4),
-              (4,5,7,6)]
+              (4,5,7,6),
+              (6,7,9,8)]
 
 perimeter,fold_lines = flat_box(post_points, post_polys,[])
 print(points_to_poly(perimeter))
@@ -646,18 +630,20 @@ print(points_to_poly(rudder_middle,xindex=0,yindex=2,tx=-110,ty=-250))
 print(points_to_poly(rudder_upper,xindex=0,yindex=2,tx=-110,ty=-240))
 
 # rudder top
-build_flat_shape(rudder_middle,rudder_upper,tx=130,ty=-170)
+hoff,a,b = build_flat_shape(rudder_middle,rudder_upper,tx=130,ty=-170)
+print(points_to_poly(a+b,tx=130,ty=-170))
 
 # rudder middle
 a=build_flat_fan((250.26,rudder_y_lower,2.28),rudder_lower_end+rudder_middle_curve+[(252.8,rudder_y_middle,2.02)],tx=160,ty=-140)
-b=build_flat_shape(rudder_front_lower, rudder_front_middle, start=a,tx=160,ty=-140)
+b = build_flat_shape(rudder_front_lower, rudder_front_middle, start=a,tx=160,ty=-140)
+print(points_to_poly(b[1]+b[2],tx=160, ty=-140))
 c=build_flat_fan((250.26,rudder_y_lower,2.28),rudder_lower_end+rudder_middle_curve+[(252.8,rudder_y_middle,2.02)],start_pivot=b[1][-1],start_point=b[2][0],reverse=True,tx=160,ty=-140)
 
 # rudder lower
-build_flat_shape(rudder_lower_end+rudder_front_lower+rudder_lower_end,
-                 rudder_bottom_end+rudder_front_bottom+rudder_bottom_end,
-                 hoffset=140,voffset=-80)
-
+hoff,a,b = build_flat_shape(rudder_lower_end+rudder_front_lower+rudder_lower_end,
+                            rudder_bottom_end+rudder_front_bottom+rudder_bottom_end,
+                            hoffset=140,voffset=-80)
+print(points_to_poly(a+b))
 print(points_to_poly(rudder_lower_end+rudder_front_lower+rudder_lower_end,
                      xindex=0,yindex=2,tx=-110,ty=-230))
 print(points_to_poly(rudder_bottom_end+rudder_front_bottom+rudder_bottom_end,
@@ -678,11 +664,11 @@ for i in range(len(s.get_bulkheads())):
         upper = make_ellipse(uppers, flip=True)
         upper = [(j[2],j[1]) for j in upper]
         points += upper
-        if bulkhead['h_split']:
+        if bulkhead['bulkhead_split']:
             points.append((uppers['width']*-1.0,
-                          bulkhead['h_split']))
+                          bulkhead['bulkhead_split']))
             points.append((uppers['width'],
-                          bulkhead['h_split']))
+                          bulkhead['bulkhead_split']))
             print(points_to_poly(points, tx=tx,ty=ty))
         #connecting_strip(upper,[],flange_width, 4, tx=tx,ty=ty)
     else:
@@ -696,12 +682,9 @@ for i in range(len(s.get_bulkheads())):
     if lowers['height']:
         lower = make_ellipse(lowers)
         lower = [(j[2],j[1]) for j in lower]
-        if bulkhead['h_split']:
+        if bulkhead['bulkhead_split']:
             points = lower 
             if 'floor' in bulkhead:
-                #points.append(((bulkhead['width']-1.0)*-1.0, bulkhead['sides'][-1][1]))
-                #points.append(((bulkhead['width'])*-1.0, bulkhead['h_split']-.75))
-                #points.append(((bulkhead['width']-.75)*-1.0, bulkhead['h_split']-.75))
                 for p in bulkhead['sides']:
                     #points.append((p[0]*-1.0, p[1]))
                     points.append((p[0]*-1.0, p[1]))
@@ -709,21 +692,18 @@ for i in range(len(s.get_bulkheads())):
                 for p in reversed(bulkhead['sides']):
                     #points.append(p)
                     points.append((p[0], p[1]))
-                #points.append((bulkhead['width']-1.0, bulkhead['sides'][-1][1]))
-                #points.append((bulkhead['width']-.75, (bulkhead['h_split']-.75)))
-                #points.append(((bulkhead['width']), bulkhead['h_split']-.75))
             else:
                 points.append((uppers['width']*-1.0,
-                              bulkhead['h_split']))
+                              bulkhead['bulkhead_split']))
                 points.append((uppers['width'],
-                              bulkhead['h_split']))
+                              bulkhead['bulkhead_split']))
 
 
 
             print(points_to_poly(points, tx=tx,ty=ty))
         #connecting_strip(lower,[],flange_width, 4, tx=tx,ty=ty)
 
-    if not bulkhead['h_split'] and points: 
+    if not bulkhead['bulkhead_split'] and points: 
         lower.reverse()
         points += lower
         print(points_to_poly(points, tx=tx,ty=ty))
