@@ -1,6 +1,8 @@
 import math
 import shapely
 
+def split(a,b):
+    return a + ((b-a)/2)
 
 def flat_box(coords,shapes,tabs,tx=0,ty=0):
     base = shapes[0]
@@ -198,11 +200,11 @@ def make_ellipse(e, numsteps=100, flip=False, mode=1):
     translate_poly(ellipse, e['datum'], e['vertical_center'], e['horizontal_center'])
     return ellipse
 
+def translate_point(p, x, y, z):
+    return (p[0]+x, p[1]+y, p[2]+z)
 def translate_poly(p, x, y, z):
     for i in range(len(p)):
-        p[i] = (p[i][0]+x, 
-                p[i][1]+y, 
-                p[i][2]+z)
+        p[i] = translate_point(p[i],x,y,z)
 
 def adjust_ellipse(a,b_old,ea,eb, numsteps=100):
     step_angle = (2*3.14159*ea['amount'])/(numsteps-1)

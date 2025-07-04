@@ -109,6 +109,26 @@ belly_bottom    = [ 4.07, 3.13,    2.53,  2.02,  1.70,  1.5,   1.5,   1.87,  2.8
 bulkhead_top    = [True,  False,   False, False, False, False, False, False, False, False, True,  True,  True,  True,    True,   True,   True,   True,    True, True,   True,   True]  
 
 
+# vstab/rudder y levels:
+rudder_y_upper     = 70
+rudder_y_middle    = 42
+rudder_y_lower     = 22
+rudder_y_bottom    = 20
+rudder_y_bottomest = 18.25
+
+# points in the vstab...
+vstab_middle_end_pos = (252.24, rudder_y_middle, 2.06)
+vstab_middle_end_neg = (252.24, rudder_y_middle, -2.06)
+
+vstab_lower_end_pos  = (249.72, rudder_y_lower,  2.37)      
+vstab_lower_end_neg  = (249.72, rudder_y_lower, -2.37)     
+vstab_bottom_end     = (249.46, rudder_y_lower,  2.37)    
+vstab_lowest_end_pos = (249.25, 18.41,           2.37)   
+vstab_lowest_end_neg = (249.25, 18.41,          -2.37)  
+
+vstab_upper_end_pos  = (255.93,rudder_y_upper,.91)
+vstab_upper_end_neg  = (255.93,rudder_y_upper,-.91)
+
 
 cockpit_floor = [(stations[0], 12,                3  ),                # 1    # floor
                  (stations[1],  8,                widths[1]-2.25),     # 2
@@ -400,18 +420,60 @@ e = (stations[-3],belly_top[-3],widths[-3]*-1)
 f = (stations[-5],belly_top[-5],widths[-5])
 g = (stations[-5],belly_top[-5],widths[-5]*-1)
 
+h = (stations[-5],upper_bottom[-5]-1,widths[-5])
+i = (stations[-5],upper_bottom[-5]-1,widths[-5]*-1)
+
+j = (split(stations[-2],stations[-3]), upper_bottom[-2]-1, widths[-2])
+k = (split(stations[-2],stations[-3]), upper_bottom[-2]-1, widths[-2]*-1)
+#TODO: fix these. I'm picking the wrong points?
+                                                            # wrong
+tail_split_pos  = translate_point(vstab_lower_end_pos, (vstab_lower_end_pos[0]-vstab_lowest_end_pos[0])/-2.0, -1, 0)
+tail_split_neg  = translate_point(vstab_lower_end_neg, (vstab_lower_end_neg[0]-vstab_lowest_end_neg[0])/-2.0, -1, 0)
+
+
 positive_side   = build_flat_fan(b,tail_ellipse_positive,tx=10,ty=-265)
 bottom_triangle = flat_triangle(positive_side[-2],positive_side[-1],distance(a,c),distance(b,c),side='right')
 negative_side   = build_flat_fan(c,tail_ellipse_negative,start_pivot=bottom_triangle[-1],start_point=bottom_triangle[0],tx=10,ty=-265)
 
-positive_vertical = flat_triangle(positive_side[0],positive_side[-1],distance(f,d),distance(b,d))
-negative_vertical = flat_triangle(negative_side[-2],negative_side[-1],distance(g,e),distance(c,e),side='right')
+positive_vertical_triangle = flat_triangle(positive_side[0],positive_side[-1],distance(f,d),distance(b,d))
+negative_vertical_triangle = flat_triangle(negative_side[-2],negative_side[-1],distance(g,e),distance(c,e),side='right')
+                                        
+positive_vertical_side     = build_flat_shape((f,h), (d,j), 
+                                              start=(positive_vertical_triangle[2],positive_vertical_triangle[0]))
+negative_vertical_side     = build_flat_shape((e,k), (g,i), 
+                                              start=(negative_vertical_triangle[0],negative_vertical_triangle[2]))
+
+#TODO: fix these. I'm picking the wrong points?
+                                 #wrong                                       [0] wrong
+top                        = [j, tail_split_pos]
+bottom                     = [b,vstab_lowest_end_pos]
+positive_vertical_end      = build_flat_shape(top, bottom,
+                                              start=(
+                                                     positive_vertical_triangle[1],
+                                                     positive_vertical_side[2][0]
+                                              ))
+
+top                        = [c,vstab_lowest_end_neg]
+bottom                     = [k, tail_split_neg]
+negative_vertical_end      = build_flat_shape(top, bottom,
+                                              start=(
+                                                     negative_vertical_side[1][1],
+                                                     negative_vertical_triangle[1]
+                                              ))
 
 
+#(stations[-4],belly_bottom[-4],widths[-4])
+#(stations[-2],upper_bottom[-2],widths[-2]), 
+#vstab_lower_end
+#vstab_lowest_end
 
-print(points_to_poly(positive_vertical,tx=10,ty=-265))
+print(points_to_poly(positive_vertical_triangle,tx=10,ty=-265))
 print(points_to_poly(bottom_triangle,tx=10,ty=-265))
-print(points_to_poly(negative_vertical,tx=10,ty=-265))
+print(points_to_poly(negative_vertical_triangle,tx=10,ty=-265))
+print(points_to_poly(positive_vertical_side[1]+positive_vertical_side[2],tx=10,ty=-265))
+print(points_to_poly(negative_vertical_side[1]+negative_vertical_side[2],tx=10,ty=-265))
+print(points_to_poly(positive_vertical_end[1]+positive_vertical_end[2],tx=10,ty=-265))
+print(points_to_poly(negative_vertical_end[1]+negative_vertical_end[2],tx=10,ty=-265))
 
 
 
@@ -518,12 +580,7 @@ wing_spar(25,18,62,[-0.05963690,0.05963690],[-0.05963690,0.05963690],tx=180,ty=-
 # vertical stabilizer
 # --------------------------------------------------------------------------------------------------------
 
-# y levels:
-rudder_y_upper     = 70
-rudder_y_middle    = 42
-rudder_y_lower     = 22
-rudder_y_bottom    = 20
-rudder_y_bottomest = 18.25
+
 
 vtail_base,vtail_top,vtail_skin = wing_skin(airfoil4, 42.65, airfoil4, 17.625, 28, 18.5, tx=180,ty=-200)
 vstab_lower_curve  = vtail_base[47:90]
@@ -543,16 +600,16 @@ transform_tail(vstab_lower_curve, 228.5, rudder_y_middle)
 transform_tail(vstab_middle_curve, 228.5, rudder_y_middle)
 transform_tail(vstab_upper_curve, 228.5, rudder_y_upper)
 
-vstab_lower_curve.insert(0,(252.24,rudder_y_middle,2.06)) # aft top
+vstab_lower_curve.insert(0,vstab_middle_end_pos) # aft top
+
+vstab_lower_curve.insert(0, vstab_lower_end_pos)
 
 
-vstab_lower_curve.insert(0,(249.61,rudder_y_lower,2.37))
+vstab_middle_curve.insert(0,vstab_middle_end_pos)
+vstab_middle_curve.append(  vstab_middle_end_neg)
 
-vstab_middle_curve.insert(0,(252.24, rudder_y_middle,  2.06))
-vstab_middle_curve.append(  (252.24, rudder_y_middle, -2.06))
-
-vstab_upper_curve.insert(0,(255.93,rudder_y_upper,.91))
-vstab_upper_curve.append(  (255.93,rudder_y_upper,-.91))
+vstab_upper_curve.insert(0,vstab_upper_end_pos)
+vstab_upper_curve.append(  vstab_upper_end_neg)
 
 # lower vertical stabilizer
 build_flat_fan((stations[-5],rudder_y_lower,widths[-5]),vstab_lower_curve, tx=160, ty=-20)
