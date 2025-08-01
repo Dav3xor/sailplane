@@ -247,6 +247,10 @@ def ellipses(ellipses, hoffset=0, numsteps = 100, flip=False):
             if a1[1] != a[0][1] and b1[1] != b[0][1]:
                 a = [a1] + a + [a2]
                 b = [b1] + b + [b2]
+                ellipses[i]['flat_ends'] = True
+            else:
+                ellipses[i]['flat_ends'] = False
+
 
         voffset,a_flat,b_flat = build_flat_shape(a,
                                                  b,
@@ -263,13 +267,18 @@ def ellipses(ellipses, hoffset=0, numsteps = 100, flip=False):
             b_flat = [p2] + b_flat + [p1]
         print(points_to_poly(a_flat+b_flat))
         voffset-=2
-        results.append((a_flat,b_flat))        
+        results.append((a_flat,
+                        b_flat, 
+                        True if ( 'flat_ends' in ellipses[i] and ellipses[i]['flat_ends'] == True) else False))        
     return results
 
-def make_tab(a,b,width=.75,tilt=.2):
+def make_tab(a,b,width=.75,tilt=.2, flip=False):
     base_angle = math.atan2(a[0]-b[0],a[1]-b[1])
     points = []
     angle = math.atan2(a[0]-b[0], a[1]-b[1])
+    if flip:
+        angle += 3.14159
+        tilt *= -1 
     points.append(a)
     points.append((a[0]+width*math.sin(angle-tilt-(math.pi/2)),
               a[1]+width*math.cos(angle-tilt-(math.pi/2))))
@@ -287,14 +296,74 @@ def round_corners(points, *ops):
     return list(zip(*poly.exterior.coords.xy))
 
 
+def connecting_strip(centerline, edges, width, skip, tx=0,ty=0, flat_ends=False):
+    a = []
+    b = []
+    if flat_ends:
+        start = 2
+        end = len(centerline)-2
+        a+=(make_tab(centerline[0],centerline[1], tilt=.4, flip=True))
+    else:
+        start = 1
+        end = len(centerline)-1
+        a.append(centerline[0])
 
-def connecting_strip(centerline, edges, width, skip, tx=0,ty=0):
+    # ...
+    for i in range(start, end):
+        p1 = centerline[i]
+        p2 = centerline[i+1]
+        angle = math.atan2(p1[0]-p2[0], p1[1]-p2[1])
+        if i % skip:
+            a.append((p1[0]+width*math.sin(angle+(math.pi/2)),
+                      p1[1]+width*math.cos(angle+(math.pi/2))))
+        else:
+            a.append((p1[0]+(width/10)*math.sin(angle-(math.pi/2)),
+                      p1[1]+(width/10)*math.cos(angle-(math.pi/2))))
+    if flat_ends:
+        a+=(make_tab(centerline[-2],centerline[-1], tilt=.4, flip=True))
+    else:
+        a.append(centerline[-1])
+
+    p1 = centerline[0]
+    p2 = centerline[1]
+    angle = math.atan2(p1[0]-p2[0], p1[1]-p2[1])
+    b.append((p1[0]+width*math.sin(angle-(math.pi/2)-.2),
+              p1[1]+width*math.cos(angle-(math.pi/2)-.2)))
+          
+    for i in range(1,len(centerline)-2):
+        p1 = centerline[i]
+        p2 = centerline[i+1]
+        angle = math.atan2(p1[0]-p2[0], p1[1]-p2[1])
+        b.append((p1[0]+width*math.sin(angle-(math.pi/2)),
+                  p1[1]+width*math.cos(angle-(math.pi/2))))
+    
+    p1 = centerline[-1]
+    p2 = centerline[-2]
+    angle = math.atan2(p1[0]-p2[0], p1[1]-p2[1])
+    b.append((p1[0]+width*math.sin(angle+(math.pi/2)+.2),
+              p1[1]+width*math.cos(angle+(math.pi/2)+.2)))
+
+
+    
+    b.reverse()
+
+    print(points_to_poly(a+b, tx=tx,ty=ty))
+
+def connecting_strip_old(centerline, edges, width, skip, tx=0,ty=0, flat_ends=False):
     a = []
     b = []
     
-    a.append(centerline[0])
-    
-    for i in range(1, len(centerline)-1):
+   
+    if not flat_ends:
+        a.append(centerline[0])
+        start = 1
+        end = len(centerline)-1
+    else:
+        start = 2
+        end = len(centerline)-2
+        a+=make_tab(centerline[0],centerline[1],width=5)
+
+    for i in range(start, end):
         p1 = centerline[i]
         p2 = centerline[i+1]
         angle = math.atan2(p1[0]-p2[0], p1[1]-p2[1])
@@ -306,7 +375,10 @@ def connecting_strip(centerline, edges, width, skip, tx=0,ty=0):
                       p1[1]+(width/10)*math.cos(angle-(math.pi/2))))
         b.append((p1[0]+width*math.sin(angle-(math.pi/2)),
                   p1[1]+width*math.cos(angle-(math.pi/2))))
-    a.append(centerline[-1])
+    if flat_ends:
+        a.append(make_tab(centerline[-2],centerline[-1],width=.1))
+    else:
+        a.append(centerline[-1])
     b.reverse()
     poly = shapely.Polygon(a+b)
     #poly = poly.buffer(.05, cap_style=3).buffer(-.05, join_style=1)
@@ -434,7 +506,8 @@ def build_flat_fan(pivot, fan, start_pivot=(0,0), start_point=None, reverse=Fals
 
         flattened.append(newp)
     flattened.append(start_pivot)
-    print(points_to_poly(flattened,tx=tx,ty=ty))
+    flattened = [(i[0]+tx,i[1]+ty) for i in flattened]
+    print(points_to_poly(flattened))
     return flattened
 
 #takes a triangle in any orientation in 3d, makes a 2d flattened equivalent.  I hope.
@@ -490,7 +563,9 @@ def build_flat_shape(a,b, voffset=0, hoffset=0, start=None, tx=0, ty=0):
     
     #print(points_to_poly(flattened_a+flattened_b, tx=tx, ty=ty))
     
-    return ((height*-1.0)+voffset, flattened_a, flattened_b)
+    return ((height*-1.0)+voffset, 
+            [(i[0]+tx,i[1]+ty) for i in flattened_a], 
+            [(i[0]+tx,i[1]+ty) for i in flattened_b])
     #return (height*-1.0)+voffset
 
 

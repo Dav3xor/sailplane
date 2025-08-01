@@ -97,12 +97,12 @@ class Stations:
 
 
 # bulkheads
-#                  0       1       2      3      4       5       6      7       8       9      10     11       12     13      14       15      16      17      18,     19      20      21 
+#                  0       1       2      3      4       5       6     7      8      9     10     11      12     13      14      15      16      17     18,     19      20      21 
 stations        = [18.0,  22.0,   26.0,  31.0,  36.0,   43.0,  48.0,  58.0,  68.0,  79.0,  84.00, 91.0,  106.0, 126.0,  146.00, 170.00, 196.0,  224.0, 246.38, 246.68, 247.02, 248.33 ]
-widths          = [ 6.66,  7.89,   8.84,  9.79, 10.54,  11.34, 11.8,  12.43, 12.75, 12.83, 12.77, 12.61, 11.91,  10.40,   8.62,   6.67,   5.0,    3.64,  2.75,   2.75,   2.75 ,  2.75]
+widths          = [ 6.66,  7.89,   8.84,  9.79, 10.54,  11.34, 11.8,  12.43, 12.75, 12.83, 12.77, 12.61, 11.91,  10.40,   8.62,   6.67,   5.0,    3.64,  2.75,   2.75,   2.75 ,  2.53]
 upper_top       = [20.08, 23.09,  25.52, 28.02, 30.10,  32.48, 33.86, 35.92, 37.09, 37.30, 36.97, 36.39, 35.45,  34.53,  33.84,  33.15,  32.55,  32.0,   None,  None,    None,  31.47]
 upper_bottom    = [14.0,  14.65,  15.32, 16.16, 17.00,  18.16, 19.00, 20.65, 22.32, 24.16, 25.0,  24.66, 24.01,  23.28,  22.69,  22.20,  22.0,   22.0,   22.0,  22.0,   22.0,   30.0]
-skin_split      = [None,  -1,     -1,    -1,    -1,     -1,    -1,    -1,    -1,    -1,    21.0,  21.0,  21.0,   21.0,   21.0,   21.0,   21.0,   21.0,   None,  None,   None,   None]
+skin_split      = [None,  -1,     -1,    -1,    -1,     -1,    -1,    -1,    -1,    -1,    22.82, 21.0,  21.0,   21.0,   21.0,   21.0,   21.0,   21.0,   None,  None,   None,   None]
 bulkhead_split  = [None,  -1,     -1,    -1,    -1,     -1,    -1,    -1,    -1,    -1,    20.0,  20.0,  20.0,   20.0,   20.0,   20.0,   20.0,   20.0,   20.0,  20.0,   20.0,   20.0]
 belly_top       = [14.0,  12.57,  11.59, 10.68, 10.01,  9.35,  9.04,  8.75,  9.07,  10.32, None,  12.38, 14.90,  17.31,  18.78,  19.70,  20,     20,     20.0,  20.0,   20.0,   20.0]
 belly_bottom    = [ 4.07, 3.13,    2.53,  2.02,  1.70,  1.5,   1.5,   1.87,  2.87,   4.54, None,   6.75,  9.61,  12.46,  13.93,  15.17,  16.18,  17.0,   18.24, None,   None,   None]
@@ -117,17 +117,22 @@ rudder_y_bottom    = 20
 rudder_y_bottomest = 18.25
 
 # points in the vstab...
-vstab_middle_end_pos = (252.24, rudder_y_middle, 2.06)
-vstab_middle_end_neg = (252.24, rudder_y_middle, -2.06)
+vstab_middle_post_pos = (250.31, rudder_y_middle,  2.2)
+vstab_middle_post_neg = (250.31, rudder_y_middle, -2.2)
+vstab_lower_post_pos  = (stations[-2],upper_bottom[-2],widths[-2])
+vstab_lower_post_neg  = (stations[-2],upper_bottom[-2],widths[-2]*-1)
+vstab_middle_end_pos  = (252.24, rudder_y_middle,  2.06)
+vstab_middle_end_neg  = (252.24, rudder_y_middle, -2.06)
 
-vstab_lower_end_pos  = (249.72, rudder_y_lower,  2.37)      
-vstab_lower_end_neg  = (249.72, rudder_y_lower, -2.37)     
-vstab_bottom_end     = (249.46, rudder_y_lower,  2.37)    
-vstab_lowest_end_pos = (249.25, 18.41,           2.37)   
-vstab_lowest_end_neg = (249.25, 18.41,          -2.37)  
+vstab_lower_end_pos   = (249.72, rudder_y_lower,   2.37)      
+vstab_lower_end_neg   = (249.72, rudder_y_lower,  -2.37)     
+vstab_bottom_end_pos  = (249.46, rudder_y_bottom,  2.37)    
+vstab_bottom_end_neg  = (249.46, rudder_y_bottom, -2.37)    
+vstab_lowest_end_pos  = (249.25, 18.41,            2.37)   
+vstab_lowest_end_neg  = (249.25, 18.41,           -2.37)  
 
-vstab_upper_end_pos  = (255.93,rudder_y_upper,.91)
-vstab_upper_end_neg  = (255.93,rudder_y_upper,-.91)
+vstab_upper_end_pos   = (255.93,rudder_y_upper,.91)
+vstab_upper_end_neg   = (255.93,rudder_y_upper,-.91)
 
 
 cockpit_floor = [(stations[0], 12,                3  ),                # 1    # floor
@@ -385,31 +390,12 @@ for i in range((len(spine)//2)-1):
 
 lowers = [s.get_lower_ellipse(i) for i in s.get_bulkheads()]
 uppers = [s.get_upper_ellipse(i) for i in s.get_bulkheads()]
-
 lowers = ellipses([i for i in lowers if i['height']],     flip=False)
 uppers = ellipses([i for i in uppers if i['height']], 50, flip=True)
 
-
-
-# tail top triangle
-da = distance((stations[-5],upper_bottom[-5],widths[-5]),
-              (stations[-2],upper_bottom[-2],widths[-2]))
-
-db = distance((stations[-1],upper_bottom[-1],widths[-1]),
-              (stations[-2],upper_bottom[-2],widths[-2]))
-
-print(da)
-print(db)
-
-print(points_to_poly(flat_triangle(uppers[-1][0][0],uppers[-1][1][-1],da,db,'right')))
-print(points_to_poly(flat_triangle(uppers[-1][0][-1],uppers[-1][1][0],da,db,'left')))
-
-
-# tail bottom
-tail_ellipse          = make_ellipse(s.get_lower_ellipse(224.0),
-                                     numsteps=99)
-tail_ellipse_positive = tail_ellipse[:50]
-tail_ellipse_negative = tail_ellipse[49:]
+# this is a series of points defining where the skin splits at the last section of the tail
+tail_split_pos  = translate_point(vstab_lower_end_pos, (vstab_lower_end_pos[0]-vstab_bottom_end_pos[0])/-2.0, -1, 0)
+tail_split_neg  = translate_point(vstab_lower_end_neg, (vstab_lower_end_neg[0]-vstab_bottom_end_neg[0])/-2.0, -1, 0)
 
 #tail bottom triangle
 a = (stations[-5],belly_bottom[-5],0)
@@ -425,16 +411,51 @@ i = (stations[-5],upper_bottom[-5]-1,widths[-5]*-1)
 
 j = (split(stations[-2],stations[-3]), upper_bottom[-2]-1, widths[-2])
 k = (split(stations[-2],stations[-3]), upper_bottom[-2]-1, widths[-2]*-1)
-#TODO: fix these. I'm picking the wrong points?
-                                                            # wrong
-tail_split_pos  = translate_point(vstab_lower_end_pos, (vstab_lower_end_pos[0]-vstab_lowest_end_pos[0])/-2.0, -1, 0)
-tail_split_neg  = translate_point(vstab_lower_end_neg, (vstab_lower_end_neg[0]-vstab_lowest_end_neg[0])/-2.0, -1, 0)
+
+
+
+
+# --------------------------------------------------------------------------------------------------------
+# tail top triangle
+da = distance((stations[-5],upper_bottom[-5],widths[-5]),
+              (stations[-2],upper_bottom[-2],widths[-2]))
+
+db = distance((stations[-1],upper_bottom[-1],widths[-1]),
+              (stations[-2],upper_bottom[-2],widths[-2]))
+
+print(da)
+print(db)
+
+tri_a = flat_triangle(uppers[-1][0][0],uppers[-1][1][-1],da,db,'right')
+tri_b = flat_triangle(uppers[-1][0][-1],uppers[-1][1][0],da,db,'left')
+
+l = [(stations[-5],upper_bottom[-5],widths[-5]),(stations[-5],upper_bottom[-5]-1,widths[-5])]
+m = [(stations[-2],upper_bottom[-2],widths[-2]),j]
+positive_vertical_side     = build_flat_shape(m, l, start=(tri_a[0],tri_a[2]))
+
+l = [(stations[-5],upper_bottom[-5],widths[-5]*-1),(stations[-5],upper_bottom[-5]-1,widths[-5]*-1)]
+m = [(stations[-2],upper_bottom[-2],widths[-2]*-1),k]
+negative_vertical_side     = build_flat_shape(l, m, start=(tri_b[2],tri_b[0]))
+
+print(points_to_poly(tri_a))
+print(points_to_poly(tri_b))
+print(points_to_poly(positive_vertical_side[1]+positive_vertical_side[2]))
+print(points_to_poly(negative_vertical_side[1]+negative_vertical_side[2]))
+
+
+# --------------------------------------------------------------------------------------------------------
+# tail bottom
+tail_ellipse          = make_ellipse(s.get_lower_ellipse(224.0),
+                                     numsteps=99)
+tail_ellipse_positive = tail_ellipse[:50]
+tail_ellipse_negative = tail_ellipse[49:]
 
 
 positive_side   = build_flat_fan(b,tail_ellipse_positive,tx=10,ty=-265)
 bottom_triangle = flat_triangle(positive_side[-2],positive_side[-1],distance(a,c),distance(b,c),side='right')
-negative_side   = build_flat_fan(c,tail_ellipse_negative,start_pivot=bottom_triangle[-1],start_point=bottom_triangle[0],tx=10,ty=-265)
+negative_side   = build_flat_fan(c,tail_ellipse_negative,start_pivot=bottom_triangle[-1],start_point=bottom_triangle[0])
 
+# this is the little chunk at the verticle part of the tail  that overlaps the front of the rudder
 positive_vertical_triangle = flat_triangle(positive_side[0],positive_side[-1],distance(f,d),distance(b,d))
 negative_vertical_triangle = flat_triangle(negative_side[-2],negative_side[-1],distance(g,e),distance(c,e),side='right')
                                         
@@ -444,7 +465,7 @@ negative_vertical_side     = build_flat_shape((e,k), (g,i),
                                               start=(negative_vertical_triangle[0],negative_vertical_triangle[2]))
 
 #TODO: fix these. I'm picking the wrong points?
-                                 #wrong                                       [0] wrong
+                                 #[0] wrong
 top                        = [j, tail_split_pos]
 bottom                     = [b,vstab_lowest_end_pos]
 positive_vertical_end      = build_flat_shape(top, bottom,
@@ -467,29 +488,34 @@ negative_vertical_end      = build_flat_shape(top, bottom,
 #vstab_lower_end
 #vstab_lowest_end
 
-print(points_to_poly(positive_vertical_triangle,tx=10,ty=-265))
-print(points_to_poly(bottom_triangle,tx=10,ty=-265))
-print(points_to_poly(negative_vertical_triangle,tx=10,ty=-265))
-print(points_to_poly(positive_vertical_side[1]+positive_vertical_side[2],tx=10,ty=-265))
-print(points_to_poly(negative_vertical_side[1]+negative_vertical_side[2],tx=10,ty=-265))
-print(points_to_poly(positive_vertical_end[1]+positive_vertical_end[2],tx=10,ty=-265))
-print(points_to_poly(negative_vertical_end[1]+negative_vertical_end[2],tx=10,ty=-265))
+print(points_to_poly(positive_vertical_triangle))
+print(points_to_poly(bottom_triangle))
+print(points_to_poly(negative_vertical_triangle))
+print(points_to_poly(positive_vertical_side[1]+positive_vertical_side[2]))
+print(points_to_poly(negative_vertical_side[1]+negative_vertical_side[2]))
+print(points_to_poly(positive_vertical_end[1]+positive_vertical_end[2]))
+print(points_to_poly(negative_vertical_end[1]+negative_vertical_end[2]))
 
 
 
+
+
+
+
+print('-----------------')
 # fuselage skin connecting strips
 # --------------------------------------------------------------------------------------------------------
 for i in range(len(lowers)):
     a = lowers[i][0]
     b = lowers[i][1]
     connecting_strip(a, [],
-                     flange_width, 5)
+                     flange_width, 5, flat_ends=lowers[i][2])
     
 for i in range(len(uppers)):
     a = uppers[i][0]
     b = uppers[i][1]
     connecting_strip(a, [],
-                     flange_width, 5)
+                     flange_width, 5, flat_ends=uppers[i][2])
 
 # make the fuselage vertical/flat sides.
 # --------------------------------------------------------------------------------------------------------
@@ -581,9 +607,10 @@ wing_spar(25,18,62,[-0.05963690,0.05963690],[-0.05963690,0.05963690],tx=180,ty=-
 # --------------------------------------------------------------------------------------------------------
 
 
-
+# the upper half of the vertical stabilizer
+# ---------------------------------
 vtail_base,vtail_top,vtail_skin = wing_skin(airfoil4, 42.65, airfoil4, 17.625, 28, 18.5, tx=180,ty=-200)
-vstab_lower_curve  = vtail_base[47:90]
+
 vstab_middle_curve = vtail_base[50:-50]
 vstab_upper_curve  = vtail_top[50:-50]
 
@@ -596,13 +623,9 @@ def transform_tail(coords, transx, y):
 def flip_z(coords):
     return [(i[0],i[1],i[2]*-1.0) for i in reversed(coords)]
 
-transform_tail(vstab_lower_curve, 228.5, rudder_y_middle)
 transform_tail(vstab_middle_curve, 228.5, rudder_y_middle)
 transform_tail(vstab_upper_curve, 228.5, rudder_y_upper)
 
-vstab_lower_curve.insert(0,vstab_middle_end_pos) # aft top
-
-vstab_lower_curve.insert(0, vstab_lower_end_pos)
 
 
 vstab_middle_curve.insert(0,vstab_middle_end_pos)
@@ -611,13 +634,48 @@ vstab_middle_curve.append(  vstab_middle_end_neg)
 vstab_upper_curve.insert(0,vstab_upper_end_pos)
 vstab_upper_curve.append(  vstab_upper_end_neg)
 
-# lower vertical stabilizer
-build_flat_fan((stations[-5],rudder_y_lower,widths[-5]),vstab_lower_curve, tx=160, ty=-20)
 # upper vertical stabilizer
-hoff,a,b = build_flat_shape(vstab_middle_curve,vstab_upper_curve,tx=140,ty=-40)
-print(points_to_poly(a+b,tx=140,ty=-40))
+hoff,a,b = build_flat_shape(vstab_middle_curve,
+                            vstab_upper_curve,
+                            tx=140,ty=-40)
+print(points_to_poly(a+b))
+
+# lower vertical stabilizer (2, one per side...  just making the positive one)
+# ---------------------------------
+#vstab_middle_post_pos = (250.31, rudder_y_middle,  2.2)
+#vstab_lower_post_pos  = (stations[-1],upper_bottom[-1],widths[-1])
+#vstab_middle_end_neg  = (252.24, rudder_y_middle, -2.06)
+#vstab_lower_end_pos   = (249.72, rudder_y_lower,   2.37)      
 
 
+vstab_lower_curve      = vtail_base[50:90]
+vstab_lower_end_curve  = vtail_base[47:50]
+transform_tail(vstab_lower_curve, 228.5, rudder_y_middle)
+transform_tail(vstab_lower_end_curve, 228.5, rudder_y_middle)
+
+vstab_lower_curve.insert(0,vstab_middle_post_pos) # aft top
+vstab_lower_curve.insert(0, vstab_lower_post_pos)
+
+panel = build_flat_fan((stations[-5],rudder_y_lower,widths[-5]),
+               vstab_lower_curve, 
+               tx=160, ty=-20)
+
+vstab_lower_end_curve.append(vstab_middle_post_pos)
+vstab_lower_end_curve.insert(0,vstab_middle_end_pos)
+vstab_lower_end_curve.reverse()
+vstab_lower_end_curve.append(vstab_lower_end_pos)
+
+end = build_flat_fan(vstab_lower_post_pos,
+                     vstab_lower_end_curve,
+                     start_pivot = panel[0],
+                     start_point = panel[1],
+                     direction = 'right')
+
+a = [(stations[-5],upper_bottom[-5],widths[-5]),
+     (stations[-5],belly_top[-5],widths[-5])]
+b = [vstab_lower_end_pos, vstab_bottom_end_pos]
+flat = build_flat_shape(b,a,start=(panel[-1],end[-2]))
+print(points_to_poly(flat[1]+flat[2]))
 
 # rudder
 # the single most complicated part of this whole thing.
@@ -688,19 +746,22 @@ print(points_to_poly(rudder_upper,xindex=0,yindex=2,tx=-110,ty=-240))
 
 # rudder top
 hoff,a,b = build_flat_shape(rudder_middle,rudder_upper,tx=130,ty=-170)
-print(points_to_poly(a+b,tx=130,ty=-170))
+print(points_to_poly(a+b))
 
 # rudder middle
 a=build_flat_fan((250.26,rudder_y_lower,2.28),rudder_lower_end+rudder_middle_curve+[(252.8,rudder_y_middle,2.02)],tx=160,ty=-140)
-b = build_flat_shape(rudder_front_lower, rudder_front_middle, start=a,tx=160,ty=-140)
-print(points_to_poly(b[1]+b[2],tx=160, ty=-140))
-c=build_flat_fan((250.26,rudder_y_lower,2.28),rudder_lower_end+rudder_middle_curve+[(252.8,rudder_y_middle,2.02)],start_pivot=b[1][-1],start_point=b[2][0],reverse=True,tx=160,ty=-140)
+b = build_flat_shape(rudder_front_lower, rudder_front_middle, start=a)
+print(points_to_poly(b[1]+b[2]))
+c=build_flat_fan((250.26,rudder_y_lower,2.28),rudder_lower_end+rudder_middle_curve+[(252.8,rudder_y_middle,2.02)],start_pivot=b[1][-1],start_point=b[2][0],reverse=True)
 
 # rudder lower
 hoff,a,b = build_flat_shape(rudder_lower_end+rudder_front_lower+rudder_lower_end,
                             rudder_bottom_end+rudder_front_bottom+rudder_bottom_end,
                             hoffset=140,voffset=-80)
 print(points_to_poly(a+b))
+
+
+# these are the ribs for the rudder lower/bottom
 print(points_to_poly(rudder_lower_end+rudder_front_lower+rudder_lower_end,
                      xindex=0,yindex=2,tx=-110,ty=-230))
 print(points_to_poly(rudder_bottom_end+rudder_front_bottom+rudder_bottom_end,
