@@ -98,15 +98,29 @@ class Stations:
 
 # bulkheads
 #                  0       1       2      3      4       5       6     7      8      9     10     11      12     13      14      15      16      17     18,     19      20      21 
-stations        = [18.0,  22.0,   26.0,  31.0,  36.0,   43.0,  48.0,  58.0,  68.0,  79.0,  84.00, 91.0,  106.0, 126.0,  146.00, 170.00, 196.0,  224.0, 246.38, 246.68, 247.02, 248.33 ]
-widths          = [ 6.66,  7.89,   8.84,  9.79, 10.54,  11.34, 11.8,  12.43, 12.75, 12.83, 12.77, 12.61, 11.91,  10.40,   8.62,   6.67,   5.0,    3.64,  2.75,   2.75,   2.75 ,  2.53]
-upper_top       = [20.08, 23.09,  25.52, 28.02, 30.10,  32.48, 33.86, 35.92, 37.09, 37.30, 36.97, 36.39, 35.45,  34.53,  33.84,  33.15,  32.55,  32.0,   None,  None,    None,  31.47]
+stations        = [18.0,  22.0,   26.0,  31.0,  36.0,   43.0,  48.0,  58.0,  68.0,  79.0,  84.00, 91.0,  106.0, 126.0,  146.00, 170.00, 196.0,  220.0, 246.38, 246.68, 247.02, 248.33 ]
+widths          = [ 6.66,  7.89,   8.84,  9.79, 10.54,  11.34, 11.8,  12.43, 12.75, 12.83, 12.77, 12.61, 11.91,  10.40,   8.62,   6.67,   5.0,    3.8,   2.75,   2.75,   2.75 ,  2.53]
+upper_top       = [20.08, 23.09,  25.52, 28.02, 30.10,  32.48, 33.86, 35.92, 37.09, 37.30, 36.97, 36.39, 35.45,  34.53,  33.84,  33.15,  32.55,  32.09,  None,  None,    None,  31.47]
 upper_bottom    = [14.0,  14.65,  15.32, 16.16, 17.00,  18.16, 19.00, 20.65, 22.32, 24.16, 25.0,  24.66, 24.01,  23.28,  22.69,  22.20,  22.0,   22.0,   22.0,  22.0,   22.0,   30.0]
 skin_split      = [None,  -1,     -1,    -1,    -1,     -1,    -1,    -1,    -1,    -1,    22.82, 21.0,  21.0,   21.0,   21.0,   21.0,   21.0,   21.0,   None,  None,   None,   None]
 bulkhead_split  = [None,  -1,     -1,    -1,    -1,     -1,    -1,    -1,    -1,    -1,    20.0,  20.0,  20.0,   20.0,   20.0,   20.0,   20.0,   20.0,   20.0,  20.0,   20.0,   20.0]
 belly_top       = [14.0,  12.57,  11.59, 10.68, 10.01,  9.35,  9.04,  8.75,  9.07,  10.32, None,  12.38, 14.90,  17.31,  18.78,  19.70,  20,     20,     20.0,  20.0,   20.0,   20.0]
 belly_bottom    = [ 4.07, 3.13,    2.53,  2.02,  1.70,  1.5,   1.5,   1.87,  2.87,   4.54, None,   6.75,  9.61,  12.46,  13.93,  15.17,  16.18,  17.0,   18.24, None,   None,   None]
 bulkhead_top    = [True,  False,   False, False, False, False, False, False, False, False, True,  True,  True,  True,    True,   True,   True,   True,    True, True,   True,   True]  
+
+# old station -5:
+# ---------------------
+# station: 224
+# width:   3.64
+# upper_top: 32
+# upper_bottom: 22
+# skin split:   21
+# bulkhead split: 20
+# belly top: 20
+# belly bottom: 17
+# bulkhead top: True
+
+
 
 
 # vstab/rudder y levels:
@@ -117,6 +131,11 @@ rudder_y_bottom    = 20
 rudder_y_bottomest = 18.25
 
 # points in the vstab...
+
+# these used to be station[-5], but I moved that forward.
+# TODO: make this another bulkhead instead?
+vstab_front_bottom = [(224,22,3.64),(224,20,3.64)]
+
 vstab_middle_post_pos = (250.31, rudder_y_middle,  2.2)
 vstab_middle_post_neg = (250.31, rudder_y_middle, -2.2)
 vstab_lower_post_pos  = (stations[-2],upper_bottom[-2],widths[-2])
@@ -445,7 +464,7 @@ print(points_to_poly(negative_vertical_side[1]+negative_vertical_side[2]))
 
 # --------------------------------------------------------------------------------------------------------
 # tail bottom
-tail_ellipse          = make_ellipse(s.get_lower_ellipse(224.0),
+tail_ellipse          = make_ellipse(s.get_lower_ellipse(220.0),
                                      numsteps=99)
 tail_ellipse_positive = tail_ellipse[:50]
 tail_ellipse_negative = tail_ellipse[49:]
@@ -656,7 +675,7 @@ transform_tail(vstab_lower_end_curve, 228.5, rudder_y_middle)
 vstab_lower_curve.insert(0,vstab_middle_post_pos) # aft top
 vstab_lower_curve.insert(0, vstab_lower_post_pos)
 
-panel = build_flat_fan((stations[-5],rudder_y_lower,widths[-5]),
+panel = build_flat_fan((vstab_front_bottom[0][0],rudder_y_lower,vstab_front_bottom[0][2]),
                vstab_lower_curve, 
                tx=160, ty=-20)
 
@@ -670,11 +689,10 @@ end = build_flat_fan(vstab_lower_post_pos,
                      start_pivot = panel[0],
                      start_point = panel[1],
                      direction = 'right')
-
-a = [(stations[-5],upper_bottom[-5],widths[-5]),
-     (stations[-5],belly_top[-5],widths[-5])]
 b = [vstab_lower_end_pos, vstab_bottom_end_pos]
-flat = build_flat_shape(b,a,start=(panel[-1],end[-2]))
+print(b)
+print(vstab_front_bottom)
+flat = build_flat_shape(b,vstab_front_bottom,start=(panel[-1],end[-2]))
 print(points_to_poly(flat[1]+flat[2]))
 
 # rudder
