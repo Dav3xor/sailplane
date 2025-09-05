@@ -132,6 +132,14 @@ def load_airfoil(filename):
     return coords
 
 
+
+def find_airfoil_extents(airfoil,thickness):
+    result = []
+    for i in reversed(airfoil):
+        if i[0] == thickness:
+            result.append(i[1])
+    return result
+
 # assumes A is at (0,0) and B is on the X axis
 # you will have to rotate this into position
 def pointc(AB,BC,AC):
@@ -431,7 +439,53 @@ def points_to_poly(points,xindex=0,yindex=1,tx=0.0,ty=0.0, color='black'):
 def points_to_line(p1,p2):
     return f'<line x1="{p1[0]}" y1="{p1[1]}" x2="{p2[0]}" y2="{p2[1]}" style="stroke:black;stroke-width:0.1" />'
 
-def wing_skin(airfoil1, chord1, airfoil2, chord2, span, sweep, tx=0, ty=0,spanlines=[]):
+# location is 'top' 'bottom' or 'both'
+# TODO: properly handle location when applicable
+def insert_airfoil_point(airfoil, percent_chord, location='both'):
+    locations, index, existed = find_airfoil_location(airfoil, percent_chord)
+    # if the points are not currently in the airfoil, add them
+    if not existed[0]:
+        airfoil.insert(index[0],locations[0])
+    if not existed[1]:
+        airfoil.insert(index[1],locations[1])
+    return locations, index, existed
+
+def trim_airfoil(airfoil, percent_chord, location='both'):
+    locations, index, existed = insert_airfoil_point(airfoil,percent_chord, location)
+    if index:
+        trimmed = airfoil.copy()
+        if location in ['top','both']:
+            trimmed = trimmed[index[0]:]
+        if location in ['bottom','both']:
+            trimmed = trimmed[:index[1]]
+    return trimmed
+
+
+def find_airfoil_location(airfoil, percent_chord):
+    def find(airfoil, percent_chord):
+        prev = airfoil[0]
+        for i in range(len(airfoil[1:])):
+            next = airfoil[i]
+            if prev[0] == percent_chord:
+                return prev, i, True # True = there was already a point at that percent_chord
+            elif (prev[0] > percent_chord) and next[0] < percent_chord:
+                #print(f'prev={prev} next={next}')
+                slope = (next[1]-prev[1])/(next[0]-prev[0])
+                #print(slope)
+                y = slope*(percent_chord-prev[0])+prev[1]
+                result = ((percent_chord,y))
+                #print(result)
+                return result, i, False   # False = it did not exist
+            else:
+                prev = next
+        return None, None, None
+    a, ba, aexisted = find(airfoil, percent_chord)
+    reversed = airfoil.copy()
+    reversed.reverse()
+    b, bb, bexisted = find(reversed, percent_chord)
+    return(a,b),(ba,-1*bb),(aexisted,bexisted)
+
+def wing_skin(airfoil1, chord1, airfoil2, chord2, span, sweep, tx=0, ty=0,aft_cut=None, spanlines=[]):
     af1_shape = expand_airfoil(airfoil1, chord1, 0, 0)
     af2_shape = expand_airfoil(airfoil2, chord2, span, sweep)
    
@@ -458,12 +512,14 @@ def wing_spar(chord_a,chord_b,span,extents_a, extents_b,tx=0,ty=0):
             (chord_b*extents_b[0], span),
             (chord_b*extents_b[1], span)]
     print(points_to_poly(spar, tx=tx, ty=ty))
-    
-    spar = [(chord_a*extents_a[1]-.125, 0),
-            (chord_a*extents_a[0]+.125, 0),
-            (chord_b*extents_b[0]+.125, span),
-            (chord_b*extents_b[1]-.125, span)]
-    print(points_to_poly(spar, tx=tx+10, ty=ty))
+   
+    # I was making another slightly thinner spar for a while, will probably rework this later to make
+    # the spars slightly thinner than the wing at that point...
+    #spar = [(chord_a*extents_a[1]-.125, 0),
+    #        (chord_a*extents_a[0]+.125, 0),
+    #        (chord_b*extents_b[0]+.125, span),
+    #        (chord_b*extents_b[1]-.125, span)]
+    #print(points_to_poly(spar, tx=tx+10, ty=ty))
             
 
 
