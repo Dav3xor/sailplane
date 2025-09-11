@@ -485,7 +485,12 @@ def find_airfoil_location(airfoil, percent_chord):
     b, bb, bexisted = find(reversed, percent_chord)
     return(a,b),(ba,-1*bb),(aexisted,bexisted)
 
-def wing_skin(airfoil1, chord1, airfoil2, chord2, span, sweep, tx=0, ty=0,aft_cut=None, spanlines=[]):
+def wing_skin(airfoil1x, chord1, airfoil2x, chord2, span, sweep, tx=0, ty=0,aft_cut=None, spanlines=[]):
+    airfoil1 = airfoil1x.copy()
+    airfoil2 = airfoil2x.copy()
+    for location in spanlines:
+        insert_airfoil_point(airfoil1, location)
+        insert_airfoil_point(airfoil2, location)
     af1_shape = expand_airfoil(airfoil1, chord1, 0, 0)
     af2_shape = expand_airfoil(airfoil2, chord2, span, sweep)
    
@@ -507,10 +512,10 @@ def wing_skin(airfoil1, chord1, airfoil2, chord2, span, sweep, tx=0, ty=0,aft_cu
     return (af1_shape, af2_shape,a)
 
 def wing_spar(chord_a,chord_b,span,extents_a, extents_b,tx=0,ty=0):
-    spar = [(chord_a*extents_a[1], 0),
-            (chord_a*extents_a[0], 0),
-            (chord_b*extents_b[0], span),
-            (chord_b*extents_b[1], span)]
+    spar = [(chord_a*extents_a[1][1], 0),
+            (chord_a*extents_a[0][1], 0),
+            (chord_b*extents_b[0][1], span),
+            (chord_b*extents_b[1][1], span)]
     print(points_to_poly(spar, tx=tx, ty=ty))
    
     # I was making another slightly thinner spar for a while, will probably rework this later to make

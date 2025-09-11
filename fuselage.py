@@ -588,19 +588,20 @@ airfoil5 = load_airfoil('GA37-614.dat')
 airfoil6 = load_airfoil('NACA-0012.dat')
 
 # the wing constants
-percent_chord_spar  = 0.35
+percent_chord_spar  = 0.32
 percent_chord_spar2 = 0.65
+percent_chord_trim  = 0.27
     
-a618_spar_extents   = find_airfoil_extents(airfoil1, percent_chord_spar)
-a618_spar2_extents  = find_airfoil_extents(airfoil1, percent_chord_spar2)
-a617_spar_extents   = find_airfoil_extents(airfoil2, percent_chord_spar)
-a617_spar2_extents  = find_airfoil_extents(airfoil2, percent_chord_spar2)
-a616_spar_extents   = find_airfoil_extents(airfoil3, percent_chord_spar)
-a616_spar2_extents  = find_airfoil_extents(airfoil3, percent_chord_spar2)
-a615_spar_extents   = find_airfoil_extents(airfoil4, percent_chord_spar)
-a615_spar2_extents  = find_airfoil_extents(airfoil4, percent_chord_spar2)
-a614_spar_extents   = find_airfoil_extents(airfoil5, percent_chord_spar)
-a614_spar2_extents  = find_airfoil_extents(airfoil5, percent_chord_spar2)
+a618_spar_extents   = insert_airfoil_point(airfoil1, percent_chord_spar)[0] #find_airfoil_extents(airfoil1, percent_chord_spar)
+a618_spar2_extents  = insert_airfoil_point(airfoil1, percent_chord_spar2)[0]
+a617_spar_extents   = insert_airfoil_point(airfoil2, percent_chord_spar)[0]
+a617_spar2_extents  = insert_airfoil_point(airfoil2, percent_chord_spar2)[0]
+a616_spar_extents   = insert_airfoil_point(airfoil3, percent_chord_spar)[0]
+a616_spar2_extents  = insert_airfoil_point(airfoil3, percent_chord_spar2)[0]
+a615_spar_extents   = insert_airfoil_point(airfoil4, percent_chord_spar)[0]
+a615_spar2_extents  = insert_airfoil_point(airfoil4, percent_chord_spar2)[0]
+a614_spar_extents   = insert_airfoil_point(airfoil5, percent_chord_spar)[0]
+a614_spar2_extents  = insert_airfoil_point(airfoil5, percent_chord_spar2)[0]
 
 root_chord          = 48
 chord_a             = 382.5-338.8
@@ -639,6 +640,7 @@ wing_skin(airfoilx,
           tx=-180, ty=0,    spanlines=spanlines)
 
 #front spars
+print(a618_spar_extents)
 wing_spar(root_chord, chord_a, 36, a618_spar_extents, a617_spar_extents, tx=-180, ty=-250)
 wing_spar(chord_a,    chord_b, 52, a617_spar_extents, a616_spar_extents, tx=-180, ty=-250+36)
 wing_spar(chord_b,    chord_c, 90, a616_spar_extents, a615_spar_extents, tx=-180, ty=-250+36+52)
@@ -656,8 +658,15 @@ wing_spar(chord_c,    chord_d, 90, a615_spar2_extents, a614_spar2_extents, tx=-2
 a = 25*.3
 b = 18*.3
 spanlines=[0.0,0.30142605]
+
+tail_percent_leading_edge = 0.0
+tail_percent_spar         = 0.30142605
+
+tail_nose_extents   = insert_airfoil_point(airfoil6, tail_percent_leading_edge)[0]
+tail_spar_extents  = insert_airfoil_point(airfoil6, tail_percent_spar)[0]
+
 wing_skin(airfoil6, 25, airfoil6, 18, 62, a-b,tx=180,ty=-100,spanlines=spanlines)
-wing_spar(25,18,62,[-0.05963690,0.05963690],[-0.05963690,0.05963690],tx=180,ty=-100)
+wing_spar(25,18,62,tail_spar_extents,tail_spar_extents,tx=180,ty=-100)
 
 
 
