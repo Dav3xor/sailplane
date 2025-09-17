@@ -425,7 +425,7 @@ def expand_airfoil(airfoil,chord,datum, sweep):
     return points
 
 
-def points_to_poly(points,xindex=0,yindex=1,tx=0.0,ty=0.0, color='black'):
+def points_to_poly(points,xindex=0,yindex=1,tx=0.0,ty=0.0, color='black', polyline=False):
     poly = ''
     for point in points:
         try:
@@ -433,8 +433,10 @@ def points_to_poly(points,xindex=0,yindex=1,tx=0.0,ty=0.0, color='black'):
         except:
             print(points)
             5/0
-
-    return f'<polygon stroke-width="0.1" fill="none" stroke="{color}" points="{poly}" />'
+    if polyline:
+        return f'<polyline stroke-width="0.1" fill="none" stroke="{color}" points="{poly}" />'
+    else:
+        return f'<polygon stroke-width="0.1" fill="none" stroke="{color}" points="{poly}" />'
 
 def points_to_line(p1,p2):
     return f'<line x1="{p1[0]}" y1="{p1[1]}" x2="{p2[0]}" y2="{p2[1]}" style="stroke:black;stroke-width:0.1" />'
@@ -450,15 +452,25 @@ def insert_airfoil_point(airfoil, percent_chord, location='both'):
         airfoil.insert(index[1],locations[1])
     return locations, index, existed
 
+# cuts the trailing end off
 def trim_airfoil(airfoil, percent_chord, location='both'):
-    locations, index, existed = insert_airfoil_point(airfoil,percent_chord, location)
+    trimmed = airfoil.copy()
+    locations, index, existed = insert_airfoil_point(trimmed,percent_chord, location)
     if index:
-        trimmed = airfoil.copy()
         if location in ['top','both']:
             trimmed = trimmed[index[0]:]
         if location in ['bottom','both']:
             trimmed = trimmed[:index[1]]
     return trimmed
+
+# returns the trailing end
+def trim_airfoil_end(airfoil, percent_chord):
+    locations, index, existed = insert_airfoil_point(airfoil,percent_chord, 'both')
+    if index:
+        top    = airfoil[:index[0]]
+        bottom = airfoil[index[1]:] 
+        # TODO: 
+    return top,bottom
 
 
 def find_airfoil_location(airfoil, percent_chord):
@@ -485,30 +497,32 @@ def find_airfoil_location(airfoil, percent_chord):
     b, bb, bexisted = find(reversed, percent_chord)
     return(a,b),(ba,-1*bb),(aexisted,bexisted)
 
-def wing_skin(airfoil1x, chord1, airfoil2x, chord2, span, sweep, tx=0, ty=0,aft_cut=None, spanlines=[]):
-    airfoil1 = airfoil1x.copy()
-    airfoil2 = airfoil2x.copy()
-    for location in spanlines:
-        insert_airfoil_point(airfoil1, location)
-        insert_airfoil_point(airfoil2, location)
-    af1_shape = expand_airfoil(airfoil1, chord1, 0, 0)
-    af2_shape = expand_airfoil(airfoil2, chord2, span, sweep)
-   
-    print(points_to_poly(af1_shape,tx=tx,ty=ty-20))
-    print(points_to_poly(af2_shape,tx=tx,ty=ty-10))
+def wing_skin(shapes1, chord1, shapes2, chord2, span, sweep, tx=0, ty=0,aft_cut=None, spanlines=[]):
+    for i in range(len(shapes1)):
+        airfoil1 = shapes1[i].copy()
+        airfoil2 = shapes2[i].copy()
+        if i==0:
+            for location in spanlines:
+                insert_airfoil_point(airfoil1, location)
+                insert_airfoil_point(airfoil2, location)
+        af1_shape = expand_airfoil(airfoil1, chord1, 0, 0)
+        af2_shape = expand_airfoil(airfoil2, chord2, span, sweep)
+       
+        print(points_to_poly(af1_shape,tx=tx,ty=ty-20, polyline=True))
+        print(points_to_poly(af2_shape,tx=tx,ty=ty-10, polyline=True))
 
-    a,b,c = build_flat_shape(af1_shape, af2_shape, voffset=ty, hoffset=tx)
-    print(points_to_poly(b+c))
-    for line in spanlines:
-        for i in range(len(airfoil1)):
-            if line == airfoil1[i][0]:
-                #print(f'{i} - {airfoil1[i]}')
-                #print(f'{b[i]},{c[i]}')
-                print(points_to_line(b[i],c[-1*i - 1]))
+        a,b,c = build_flat_shape(af1_shape, af2_shape, voffset=ty, hoffset=tx)
+        print(points_to_poly(b+c))
+        for line in spanlines:
+            for i in range(len(airfoil1)):
+                if line == airfoil1[i][0]:
+                    #print(f'{i} - {airfoil1[i]}')
+                    #print(f'{b[i]},{c[i]}')
+                    print(points_to_line(b[i],c[-1*i - 1]))
 
-    #connecting_strip(c,[],.75,3)
-    # I used this to determine which parts of the 
-    #print(af1_shape[50:90])
+        #connecting_strip(c,[],.75,3)
+        # I used this to determine which parts of the 
+        #print(af1_shape[50:90])
     return (af1_shape, af2_shape,a)
 
 def wing_spar(chord_a,chord_b,span,extents_a, extents_b,tx=0,ty=0):

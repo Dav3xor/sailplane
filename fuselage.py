@@ -578,79 +578,115 @@ print(points_to_poly(perimeter))
 
 # wings
 # --------------------------------------------------------------------------------------------------------
-airfoil1 = load_airfoil('GA37-618.dat')
-airfoil2 = load_airfoil('GA37-617.dat')
-airfoil3 = load_airfoil('GA37-616.dat')
-airfoil4 = load_airfoil('GA37-615.dat')
-airfoil5 = load_airfoil('GA37-614.dat')
+airfoils = [load_airfoil('GA37-618.dat'),
+            load_airfoil('GA37-617.dat'),
+            load_airfoil('GA37-616.dat'),
+            load_airfoil('GA37-615.dat'),
+            load_airfoil('GA37-614.dat')]
 
-
-airfoil6 = load_airfoil('NACA-0012.dat')
+tail_airfoil = load_airfoil('NACA-0012.dat')
 
 # the wing constants
-percent_chord_spar  = 0.32
-percent_chord_spar2 = 0.65
-percent_chord_trim  = 0.27
+percent_chord_spar  = 0.37
+percent_chord_spar2 = 0.70
+percent_chord_trim  = 0.73
+percent_chord_flap  = 0.75
     
-a618_spar_extents   = insert_airfoil_point(airfoil1, percent_chord_spar)[0] #find_airfoil_extents(airfoil1, percent_chord_spar)
-a618_spar2_extents  = insert_airfoil_point(airfoil1, percent_chord_spar2)[0]
-a617_spar_extents   = insert_airfoil_point(airfoil2, percent_chord_spar)[0]
-a617_spar2_extents  = insert_airfoil_point(airfoil2, percent_chord_spar2)[0]
-a616_spar_extents   = insert_airfoil_point(airfoil3, percent_chord_spar)[0]
-a616_spar2_extents  = insert_airfoil_point(airfoil3, percent_chord_spar2)[0]
-a615_spar_extents   = insert_airfoil_point(airfoil4, percent_chord_spar)[0]
-a615_spar2_extents  = insert_airfoil_point(airfoil4, percent_chord_spar2)[0]
-a614_spar_extents   = insert_airfoil_point(airfoil5, percent_chord_spar)[0]
-a614_spar2_extents  = insert_airfoil_point(airfoil5, percent_chord_spar2)[0]
 
-root_chord          = 48
-chord_a             = 382.5-338.8
-chord_b             = 380.3-342.9
-chord_c             = 376.65-349.9
-chord_d             = 372.92-356.93
-offset_a            = (root_chord*.4)-(chord_a*.4)
-offset_b            = (chord_a*.4)-(chord_b*.4)
-offset_c            = (chord_b*.4)-(chord_c*.4)
-offset_d            = (chord_c*.4)-(chord_d*.4)
+spar1_extents = []
+spar2_extents = []
+for airfoil in airfoils:
+    spar1_extents.append(insert_airfoil_point(airfoil, percent_chord_spar)[0]) #find_airfoil_extents(airfoil1, percent_chord_spar)
+    spar2_extents.append(insert_airfoil_point(airfoil, percent_chord_spar2)[0])
 
 
+#a618_spar_extents   = insert_airfoil_point(airfoil1, percent_chord_spar)[0] #find_airfoil_extents(airfoil1, percent_chord_spar)
+#a618_spar2_extents  = insert_airfoil_point(airfoil1, percent_chord_spar2)[0]
+#a617_spar_extents   = insert_airfoil_point(airfoil2, percent_chord_spar)[0]
+#a617_spar2_extents  = insert_airfoil_point(airfoil2, percent_chord_spar2)[0]
+#a616_spar_extents   = insert_airfoil_point(airfoil3, percent_chord_spar)[0]
+#a616_spar2_extents  = insert_airfoil_point(airfoil3, percent_chord_spar2)[0]
+#a615_spar_extents   = insert_airfoil_point(airfoil4, percent_chord_spar)[0]
+#a615_spar2_extents  = insert_airfoil_point(airfoil4, percent_chord_spar2)[0]
+#a614_spar_extents   = insert_airfoil_point(airfoil5, percent_chord_spar)[0]
+#a614_spar2_extents  = insert_airfoil_point(airfoil5, percent_chord_spar2)[0]
 
-# wing
+chords = [ 48,
+           382.5-338.8,
+           380.3-342.9,
+           376.65-349.9,
+           372.92-356.93]
+
+spans = [36,52,90,90]
+vloc = [0,-40,-95,-190]
+
+#offset_a            = (root_chord*percent_chord_spar)-(chord_a*percent_chord_spar)
+#offset_b            = (chord_a*percent_chord_spar)-(chord_b*percent_chord_spar)
+#offset_c            = (chord_b*percent_chord_spar)-(chord_c*percent_chord_spar)
+#offset_d            = (chord_c*percent_chord_spar)-(chord_d*percent_chord_spar)
+
+
+#airfoil1x = trim_airfoil(airfoil1, percent_chord_trim)
+
+# wing skin
+
 spanlines = [0.0,percent_chord_spar,percent_chord_spar2]
-wing_skin(airfoil1, 
-          root_chord, airfoil2, chord_a, 36, offset_a, 
-          tx=-140, ty=0,    spanlines=spanlines)
-wing_skin(airfoil2, 
-          chord_a, airfoil3,    chord_b, 52, offset_b, 
-          tx=-140, ty=-40,  spanlines=spanlines)
-wing_skin(airfoil3, 
-          chord_b, airfoil4,    chord_c, 90, offset_c, 
-          tx=-140, ty=-95,  spanlines=spanlines)
-wing_skin(airfoil4, 
-          chord_c, airfoil5,    chord_d, 90, offset_d, 
-          tx=-140, ty=-190, spanlines=spanlines)
 
+flap_shapes = []
+for i in range(len(airfoils)):
+    print('x')
+    flap_root_top, flap_root_bottom   = trim_airfoil_end(airfoils[i], percent_chord_flap)
+    radius = (flap_root_top[-1][1] - flap_root_bottom[0][1])/2
+    
+    flap_root_front = [[i[0],i[-1]] for i in make_ellipse({'width':             radius,
+                                                     'height':            radius,
+                                                     'datum':             flap_root_top[-1][0],
+                                                     'horizontal_center': flap_root_top[-1][1]-radius,
+                                                     'vertical_center':   0,
+                                                     'amount':            0.5},
+                                                     numsteps=20, mode=2, flip=2)][1:-1]
+    flap_shapes.append(flap_root_top+flap_root_front+flap_root_bottom)
 
-# test for insert_airfoil_point
-airfoilx = trim_airfoil(airfoil1, .69)
-airfoily = trim_airfoil(airfoil2, .69)
-print(airfoilx)
-wing_skin(airfoilx, 
-          root_chord, airfoily, chord_a, 36, offset_a, 
-          tx=-180, ty=0,    spanlines=spanlines)
+for i in range(len(airfoils)-1):
+
+    wing_skin([trim_airfoil(airfoils[i],percent_chord_trim),flap_shapes[i]], 
+              chords[i], 
+              [trim_airfoil(airfoils[i+1],percent_chord_trim),flap_shapes[i+1]], 
+              chords[i+1], spans[i], 
+              (chords[i]*percent_chord_spar)-(chords[i+1]*percent_chord_spar), 
+              tx=-140, ty=vloc[i],    spanlines=spanlines)
+# flaps
+
+# TODO:
+#flap_root_top, flap_root_bottom   = trim_airfoil_end(airfoil1, percent_chord_flap)
+#radius = (flap_root_top[-1][1] - flap_root_bottom[0][1])/2
+#
+#flap_root_front = [[i[0],i[-1]] for i in make_ellipse({'width':             radius,
+#                                                 'height':            radius,
+#                                                 'datum':             flap_root_top[-1][0],
+#                                                 'horizontal_center': flap_root_top[-1][1]-radius,
+#                                                 'vertical_center':   0,
+#                                                 'amount':            0.5},
+#                                                 numsteps=20, mode=2, flip=2)][1:-1]
+#rint(points_to_poly(expand_airfoil(flap_root_top+flap_root_front+flap_root_bottom, root_chord, 0,0), tx=-180,ty=0))
+
 
 #front spars
-print(a618_spar_extents)
-wing_spar(root_chord, chord_a, 36, a618_spar_extents, a617_spar_extents, tx=-180, ty=-250)
-wing_spar(chord_a,    chord_b, 52, a617_spar_extents, a616_spar_extents, tx=-180, ty=-250+36)
-wing_spar(chord_b,    chord_c, 90, a616_spar_extents, a615_spar_extents, tx=-180, ty=-250+36+52)
-wing_spar(chord_c,    chord_d, 90, a615_spar_extents, a614_spar_extents, tx=-180, ty=-250+36+52+90)
+#print(a618_spar_extents)
+for i in range(len(chords)-1):
+    wing_spar(chords[i], chords[i+1], spans[i], spar1_extents[i], spar1_extents[i+1], tx=-180, ty=-250+sum(spans[:i]))
+    wing_spar(chords[i], chords[i+1], spans[i], spar2_extents[i], spar2_extents[i+1], tx=-210, ty=-250+sum(spans[:i]))
+#wing_spar(root_chord, chord_a, 36, a618_spar_extents, a617_spar_extents, tx=-180, ty=-250)
+#wing_spar(chord_a,    chord_b, 52, a617_spar_extents, a616_spar_extents, tx=-180, ty=-250+36)
+#wing_spar(chord_b,    chord_c, 90, a616_spar_extents, a615_spar_extents, tx=-180, ty=-250+36+52)
+#wing_spar(chord_c,    chord_d, 90, a615_spar_extents, a614_spar_extents, tx=-180, ty=-250+36+52+90)
 
 #rear spars
-wing_spar(root_chord, chord_a, 36, a618_spar2_extents, a617_spar2_extents, tx=-210, ty=-250)
-wing_spar(chord_a,    chord_b, 52, a617_spar2_extents, a616_spar2_extents, tx=-210, ty=-250+36)
-wing_spar(chord_b,    chord_c, 90, a616_spar2_extents, a615_spar2_extents, tx=-210, ty=-250+36+52)
-wing_spar(chord_c,    chord_d, 90, a615_spar2_extents, a614_spar2_extents, tx=-210, ty=-250+36+52+90)
+#wing_spar(root_chord, chord_a, 36, a618_spar2_extents, a617_spar2_extents, tx=-210, ty=-250)
+#wing_spar(chord_a,    chord_b, 52, a617_spar2_extents, a616_spar2_extents, tx=-210, ty=-250+36)
+#wing_spar(chord_b,    chord_c, 90, a616_spar2_extents, a615_spar2_extents, tx=-210, ty=-250+36+52)
+#wing_spar(chord_c,    chord_d, 90, a615_spar2_extents, a614_spar2_extents, tx=-210, ty=-250+36+52+90)
+
 
 
 # horizontal tail
@@ -662,10 +698,10 @@ spanlines=[0.0,0.30142605]
 tail_percent_leading_edge = 0.0
 tail_percent_spar         = 0.30142605
 
-tail_nose_extents   = insert_airfoil_point(airfoil6, tail_percent_leading_edge)[0]
-tail_spar_extents  = insert_airfoil_point(airfoil6, tail_percent_spar)[0]
+tail_nose_extents   = insert_airfoil_point(tail_airfoil, tail_percent_leading_edge)[0]
+tail_spar_extents  = insert_airfoil_point(tail_airfoil, tail_percent_spar)[0]
 
-wing_skin(airfoil6, 25, airfoil6, 18, 62, a-b,tx=180,ty=-100,spanlines=spanlines)
+wing_skin([tail_airfoil], 25, [tail_airfoil], 18, 62, a-b,tx=180,ty=-100,spanlines=spanlines)
 wing_spar(25,18,62,tail_spar_extents,tail_spar_extents,tx=180,ty=-100)
 
 
@@ -677,7 +713,7 @@ wing_spar(25,18,62,tail_spar_extents,tail_spar_extents,tx=180,ty=-100)
 
 # the upper half of the vertical stabilizer
 # ---------------------------------
-vtail_base,vtail_top,vtail_skin = wing_skin(airfoil6, 42.65, airfoil6, 17.625, 28, 18.5, tx=180,ty=-200)
+vtail_base,vtail_top,vtail_skin = wing_skin([tail_airfoil], 42.65, [tail_airfoil], 17.625, 28, 18.5, tx=180,ty=-200)
 
 vstab_middle_curve = vtail_base[50:-50]
 vstab_upper_curve  = vtail_top[50:-50]
