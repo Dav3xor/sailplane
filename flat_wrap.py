@@ -107,6 +107,7 @@ def find_pointr(a,b,A,B):
 
 
 
+
 def distance(a,b):
     if len(a) != len(b):
         5/0
@@ -121,6 +122,26 @@ def distance2(dx,dy):
     return math.sqrt(dx**2 + dy**2)
 
 
+def points_on_a_line(a,b,num_divisions):
+    # beware fenceposting, with a num_divisions of 4, you get 3 divisions.
+    #
+    # this is what makes sense to me
+    distance_between = distance(a,b)
+    vector = (b[0]-a[0],
+              b[1]-a[1],
+              b[2]-a[2])
+    points = []
+    for i in range(1,num_divisions):
+        d = (1/(num_divisions))*i
+        print(f'distance a->b {distance(a,b)}')
+        print(f'distance_between {distance_between}')
+        print(f'd a->b {d}')
+        print(f'vector {vector}')
+        print(f'reconstituded b {(a[0]+vector[0],a[1]+vector[1],a[2]+vector[2])}')
+        points.append((a[0] + (d*vector[0]),
+                     a[1] + (d*vector[1]),
+                     a[2] + (d*vector[2])))
+    return points 
 
 def load_airfoil(filename):
     coords = []
@@ -497,29 +518,40 @@ def find_airfoil_location(airfoil, percent_chord):
     b, bb, bexisted = find(reversed, percent_chord)
     return(a,b),(ba,-1*bb),(aexisted,bexisted)
 
-def wing_skin(shapes1, chord1, shapes2, chord2, span, sweep, tx=0, ty=0,aft_cut=None, spanlines=[]):
+def wing_skin(shapes1, chord1, shapes2, chord2, span, sweep, num_ribs=None, tx=0, ty=0,aft_cut=None, spanlines=[[]]):
     for i in range(len(shapes1)):
         airfoil1 = shapes1[i].copy()
         airfoil2 = shapes2[i].copy()
         if i==0:
-            for location in spanlines:
+            for location in spanlines[i]:
                 insert_airfoil_point(airfoil1, location)
                 insert_airfoil_point(airfoil2, location)
         af1_shape = expand_airfoil(airfoil1, chord1, 0, 0)
         af2_shape = expand_airfoil(airfoil2, chord2, span, sweep)
-       
+      
+        
         print(points_to_poly(af1_shape,tx=tx,ty=ty-20, polyline=True))
-        print(points_to_poly(af2_shape,tx=tx,ty=ty-10, polyline=True))
+        print(points_to_poly(af2_shape,tx=tx,ty=ty-20, polyline=True))
 
-        a,b,c = build_flat_shape(af1_shape, af2_shape, voffset=ty, hoffset=tx)
+        if num_ribs != None: 
+            ribs = [[] for j in range(num_ribs)]
+            for j in range(len(af1_shape)):
+                points = points_on_a_line(af1_shape[j],af2_shape[j],num_ribs)
+                for k in range(len(points)):
+                    ribs[k].append(points[k])
+            for rib in ribs:
+                print(points_to_poly(rib,tx=tx,ty=ty-20,polyline=True))
+
+
+        a,b,c = build_flat_shape(af1_shape, af2_shape, voffset=ty, hoffset=tx-(i*30))
         print(points_to_poly(b+c))
-        for line in spanlines:
+        for line in spanlines[i]:
             for i in range(len(airfoil1)):
                 if line == airfoil1[i][0]:
                     #print(f'{i} - {airfoil1[i]}')
                     #print(f'{b[i]},{c[i]}')
                     print(points_to_line(b[i],c[-1*i - 1]))
-
+        
         #connecting_strip(c,[],.75,3)
         # I used this to determine which parts of the 
         #print(af1_shape[50:90])
