@@ -133,11 +133,11 @@ def points_on_a_line(a,b,num_divisions):
     points = []
     for i in range(1,num_divisions):
         d = (1/(num_divisions))*i
-        print(f'distance a->b {distance(a,b)}')
-        print(f'distance_between {distance_between}')
-        print(f'd a->b {d}')
-        print(f'vector {vector}')
-        print(f'reconstituded b {(a[0]+vector[0],a[1]+vector[1],a[2]+vector[2])}')
+        #print(f'distance a->b {distance(a,b)}')
+        #print(f'distance_between {distance_between}')
+        #print(f'd a->b {d}')
+        #print(f'vector {vector}')
+        #print(f'reconstituded b {(a[0]+vector[0],a[1]+vector[1],a[2]+vector[2])}')
         points.append((a[0] + (d*vector[0]),
                      a[1] + (d*vector[1]),
                      a[2] + (d*vector[2])))
@@ -321,8 +321,96 @@ def round_corners(points, *ops):
     #poly = poly.buffer(.05, cap_style=3).buffer(-.05, join_style=1)
     #poly = poly.buffer(-0.1).buffer(.2).buffer(-0.1)
     for op in ops:
-        poly = poly.buffer(op)
+        # 8 and .002 work reasonably well.
+        #poly = poly.buffer(op,quad_segs=8)
+        poly = poly.buffer(op,quad_segs=10)
+    poly = shapely.get_parts(poly)[0]
     return list(zip(*poly.exterior.coords.xy))
+
+def fancy_notch(angle, center, length, spread):
+    points = []
+    points.append(center)
+    points.append((center[0]+(math.sin(angle-spread)*length),
+                  center[1]+(math.cos(angle-spread)*length)))
+    points.append((center[0]+(math.sin(angle+spread)*length),
+                  center[1]+(math.cos(angle+spread)*length)))
+    
+    return round_corners(points,.25)
+
+# subtract b from a
+def difference(a,b):
+    print('x')
+    pa = shapely.Polygon(a)
+    pb = shapely.Polygon(b)
+    pc = shapely.difference(pa,pb,grid_size=.01)
+    pc = shapely.get_parts(pc)[0]
+    return list(zip(*pc.exterior.coords.xy))
+
+def simplify(a):
+    pa = shapely.Polygon(a)
+    #pa = shapely.simplify(pa,.002)
+    pa = shapely.simplify(pa,.005)
+    pa = shapely.get_parts(pa)[0]
+    return list(zip(*pa.exterior.coords.xy))
+
+
+def make_notched_bulkhead(points, bulkhead, ellipse,tx,ty, side='bottom'):
+    # (outside) sheet metal cutout, including flanges/notches
+    bulkhead_shape = simplify(round_corners(points, .75))
+
+    #print(points_to_poly(round_corners(points, .75), tx=tx,ty=ty))
+    
+
+    # remove the bottom/top corners
+    if side == 'bottom':
+        left_corner  = ((ellipse['width']*-1.0-1, bulkhead['bulkhead_split']-.375),
+                        (ellipse['width']*-1.0-1, bulkhead['bulkhead_split']+1),
+                        (ellipse['width']*-1.0+.375, bulkhead['bulkhead_split']+1),
+                        (ellipse['width']*-1.0+.25, bulkhead['bulkhead_split']-.25))
+    else:
+        left_corner  = ((ellipse['width']*-1.0-1, bulkhead['bulkhead_split']+.375),
+                        (ellipse['width']*-1.0-1, bulkhead['bulkhead_split']-1),
+                        (ellipse['width']*-1.0+.375, bulkhead['bulkhead_split']-1),
+                        (ellipse['width']*-1.0+.25, bulkhead['bulkhead_split']+.25))
+    
+    right_corner = [(i[0]*-1,i[1]) for i in left_corner]
+
+    #print(points_to_poly(round_corners(left_corner,.25), tx=tx, ty=ty))
+    #print(points_to_poly(round_corners(right_corner,.25), tx=tx, ty=ty))
+    left_corner  = round_corners(left_corner,.25)
+    right_corner = round_corners(right_corner,.25)
+  
+    top_notch = fancy_notch(math.pi*-1,(points[200][0],points[200][1]+.25),2,.25)
+    #print(points_to_poly(top_notch,tx=tx,ty=ty))
+    bulkhead_shape = difference(bulkhead_shape,top_notch)
+    bulkhead_shape = difference(bulkhead_shape,left_corner)
+    bulkhead_shape = difference(bulkhead_shape,right_corner)
+
+    #print(points_to_poly(top_notch,tx=tx,ty=ty))
+    for i in range(1,len(points)//2,40):
+        angle = math.atan2(points[i-1][0]-points[i][0], 
+                           points[i-1][1]-points[i][1])+(math.pi/2)
+        if side == 'bottom':
+            setback_point = (points[i][0]+(math.sin(angle-math.pi)*.25),
+                             points[i][1]+(math.cos(angle-math.pi)*.25))
+            notch1 = fancy_notch(math.atan2(points[i-1][0]-points[i][0], 
+                                            points[i-1][1]-points[i][1]) + (math.pi/2),
+                                 setback_point,2,.15)
+        else:
+            setback_point = (points[i][0]-(math.sin(angle-math.pi)*.25),
+                             points[i][1]-(math.cos(angle-math.pi)*.25))
+            notch1 = fancy_notch(math.atan2(points[i-1][0]-points[i][0], 
+                                            points[i-1][1]-points[i][1]) - (math.pi/2),
+                                 setback_point,2,.15)
+        notch2 = [(i[0]*-1,i[1]) for i in notch1]
+        
+        bulkhead_shape = difference(bulkhead_shape,notch1)
+        bulkhead_shape = difference(bulkhead_shape,notch2)
+        print(points_to_poly(notch1,tx=tx,ty=ty))
+        print(points_to_poly(notch2,tx=tx,ty=ty))
+    print(points_to_poly(simplify(round_corners(bulkhead_shape,-.05,.1,-.05)),tx=tx,ty=ty)) 
+    print(points_to_poly(bulkhead_shape,color="red",tx=tx,ty=ty)) 
+
 
 
 def connecting_strip(centerline, edges, width, skip, tx=0,ty=0, flat_ends=False):
@@ -446,7 +534,7 @@ def expand_airfoil(airfoil,chord,datum, sweep):
     return points
 
 
-def points_to_poly(points,xindex=0,yindex=1,tx=0.0,ty=0.0, color='black', polyline=False):
+def points_to_poly(points,xindex=0,yindex=1,tx=0.0,ty=0.0, color='black', dash=None,polyline=False):
     poly = ''
     for point in points:
         try:
@@ -454,8 +542,13 @@ def points_to_poly(points,xindex=0,yindex=1,tx=0.0,ty=0.0, color='black', polyli
         except:
             print(points)
             5/0
+    if dash:
+        dash = f"stroke-dasharray='{dash}'" # svg format --> 0.5, 0.5
+    else:
+        dash = ''
+
     if polyline:
-        return f'<polyline stroke-width="0.1" fill="none" stroke="{color}" points="{poly}" />'
+        return f'<polyline stroke-width="0.1" {dash} fill="none" stroke="{color}" points="{poly}" />'
     else:
         return f'<polygon stroke-width="0.1" fill="none" stroke="{color}" points="{poly}" />'
 

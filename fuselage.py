@@ -119,6 +119,12 @@ bulkhead_split  = [None,  -1,     -1,    -1,    -1,     -1,    -1,    -1,    -1,
 belly_top       = [14.0,  12.57,  11.59, 10.68, 10.01,  9.35,  9.04,  8.75,  9.07,  10.32, None,  12.38, 14.90,  17.31,  18.78,  19.70,  20,     20,     20.0,  20.0,   20.0,   20.0]
 belly_bottom    = [ 4.07, 3.13,    2.53,  2.02,  1.70,  1.5,   1.5,   1.87,  2.87,   4.54, None,   6.75,  9.61,  12.46,  13.93,  15.17,  16.18,  17.0,   18.24, None,   None,   None]
 bulkhead_top    = [True,  False,   False, False, False, False, False, False, False, False, True,  True,  True,  True,    True,   True,   True,   True,    True, True,   True,   True]  
+skin_thickness  = [  .02,  .02,     .02,   .02,   .02,   .02,   .02,   .02,   .02,    .02,   .02,   .02,   .02,    .02,    .02,    .02,    .02,    .02,    .02,   .02,    .02,    .02]
+conn_thickness  = [  .02,  .02,     .02,   .02,   .02,   .02,   .02,   .02,   .02,    .02,   .02,   .02,   .02,    .02,    .02,    .02,    .02,    .02,    .02,   .02,    .02,    .02]
+bulk_thickness  = [  .02,  .02,     .02,   .02,   .02,   .02,   .02,   .02,   .02,    .02,   .02,   .02,   .02,    .02,    .02,    .02,    .02,    .02,    .02,   .02,    .02,    .02]
+
+
+
 
 # old station -5:
 # ---------------------
@@ -409,14 +415,6 @@ for i in range((len(spine)//2)-1):
 # fuselage skin
 
 
-#fuselage = []
-#for bulkhead in s.get_bulkheads():
-#    upper = s.get_upper_ellipse(bulkhead)
-#    lower = s.get_lower_ellipse(bulkhead)
-#
-#    fuselage.append({'upper': upper,
-#                     'lower': lower})
-
 # fuselage top & bottom
 
 lowers = [s.get_lower_ellipse(i) for i in s.get_bulkheads()]
@@ -454,8 +452,8 @@ da = distance((stations[-5],upper_bottom[-5],widths[-5]),
 db = distance((stations[-1],upper_bottom[-1],widths[-1]),
               (stations[-2],upper_bottom[-2],widths[-2]))
 
-print(da)
-print(db)
+#print(da)
+#print(db)
 
 tri_a = flat_triangle(uppers[-1][0][0],uppers[-1][1][-1],da,db,'right')
 tri_b = flat_triangle(uppers[-1][0][-1],uppers[-1][1][0],da,db,'left')
@@ -859,7 +857,7 @@ for i in range(len(s.get_bulkheads())):
   
     uppers = s.get_upper_ellipse(i)
     if uppers['height']:
-        upper = make_ellipse(uppers, flip=True)
+        upper = make_ellipse(uppers, flip=True, numsteps=401)
         upper = [(j[2],j[1]) for j in upper]
         points += upper
         if bulkhead['bulkhead_split']:
@@ -868,6 +866,14 @@ for i in range(len(s.get_bulkheads())):
             points.append((uppers['width'],
                           bulkhead['bulkhead_split']))
             print(points_to_poly(points, tx=tx,ty=ty))
+            make_notched_bulkhead(points, bulkhead, uppers,tx,ty, side='top')
+
+            a = uppers['width']*1.05
+            b = a*-.55
+            c = b-.5
+
+
+            print(points_to_poly(round_corners(points, b,a,c), tx=tx,ty=ty))
     else:
         if uppers['width'] and uppers['vertical_center']:
             points.append((uppers['width'],
@@ -877,7 +883,7 @@ for i in range(len(s.get_bulkheads())):
 
     lowers = s.get_lower_ellipse(i)
     if lowers['height']:
-        lower = make_ellipse(lowers)
+        lower = make_ellipse(lowers,numsteps=401)
         lower = [(j[2],j[1]) for j in lower]
         if bulkhead['bulkhead_split']:
             points = lower 
@@ -894,11 +900,16 @@ for i in range(len(s.get_bulkheads())):
                               bulkhead['bulkhead_split']))
                 points.append((uppers['width'],
                               bulkhead['bulkhead_split']))
+                
+                # center cutout
+                a = lowers['height']*1.2
+                b = a*-.55
+                c = b-2.2
+                print(points_to_poly(round_corners(points, b,a,c), tx=tx,ty=ty))
 
-
-
+                make_notched_bulkhead(points, bulkhead, lowers,tx,ty)
             print(points_to_poly(points, tx=tx,ty=ty))
-        #connecting_strip(lower,[],flange_width, 4, tx=tx,ty=ty)
+        
 
     if not bulkhead['bulkhead_split'] and points: 
         lower.reverse()
