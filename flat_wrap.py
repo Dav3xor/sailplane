@@ -534,6 +534,12 @@ def expand_airfoil(airfoil,chord,datum, sweep):
     return points
 
 
+def points_to_circles(points, radius, width = '.1', units = ''):
+    output = ''
+    for point in points:
+        output += f'<circle r="{radius}{units}" cx="{point[0]}{units}" cy="{point[1]}{units}"  stroke="black" stroke-width="{width}{units}" fill="none" />\n'
+    return output
+
 def points_to_poly(points,xindex=0,yindex=1,tx=0.0,ty=0.0, color='black', dash=None,polyline=False):
     poly = ''
     for point in points:
