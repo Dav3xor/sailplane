@@ -123,7 +123,17 @@ skin_thickness  = [  .02,  .02,     .02,   .02,   .02,   .02,   .02,   .02,   .0
 conn_thickness  = [  .02,  .02,     .02,   .02,   .02,   .02,   .02,   .02,   .02,    .02,   .02,   .02,   .02,    .02,    .02,    .02,    .02,    .02,    .02,   .02,    .02,     .02 ]
 bulk_thickness  = [  .02,  .02,     .02,   .02,   .02,   .02,   .02,   .02,   .02,    .02,   .02,   .02,   .02,    .02,    .02,    .02,    .02,    .02,    .02,   .02,    .02,     .02 ]
 
+top_notches     = [ [],              [0,2,2],         [],              [],              [],              
+                    [],              [],              [],              [],              [], 
+                    [0,3,3,3,3,3,2], [1,3,3,3,3,3,2], [1,3,3,3,3,3],   [1,3,3,3,3,2],   [1,3,3,3,2,2],
+                    [1,3,3,3,2],     [1,3,3,2,2],     [1,3,3,2,1],     [],              [],
+                    [], [] ]
 
+bottom_notches  = [ [],              [1,2,2,2,2],     [1,1.5,2,2,2],     [1,1.5,1.5,2,2,2],   [1,1.5,1.5,2,2,3],
+                    [1,1.5,1.5,2,2,3],   [1,1.5,1.5,2,3,3],   [1,1.5,1.5,2,3,3,3], [1,1.5,1.5,2,3,3,3], [0,1.5,1.5,2,3,3,3],
+                    [],              [1,1.5,1.5,2,3,3,3], [1,1.5,1.5,2,3,3],   [1,1.5,2,3,3],     [1,1.5,2,2,3],
+                    [0,1.5,2,3],       [0,1.5,1.5,2],       [1,1.5,1.5,1.5],       [],              [],
+                    [], [] ]
 
 
 # old station -5:
@@ -242,7 +252,9 @@ for i in range(len(stations)):
     data['upper_bottom'] = upper_bottom[i]
     data['belly_top']    = belly_top[i]
     data['belly_bottom'] = belly_bottom[i]
-    data['bulkhead_top']     = bulkhead_top[i]
+    data['bulkhead_top'] = bulkhead_top[i]
+    data['top_notches']    = top_notches[i]
+    data['bottom_notches'] = bottom_notches[i]
     s.add(station,**data)
 
 for station in cockpit_floor:
@@ -611,7 +623,6 @@ spanlines = [[0.0,percent_chord_spar,percent_chord_spar2],[]]
 # first, the flaps...
 flap_shapes = []
 for i in range(len(airfoils)):
-    print('x')
     flap_root_top, flap_root_bottom   = trim_airfoil_end(airfoils[i], percent_chord_flap)
     radius = (flap_root_top[-1][1] - flap_root_bottom[0][1])/2
     
@@ -848,7 +859,7 @@ for i in range(len(s.get_bulkheads())):
             points.append((uppers['width'],
                           bulkhead['bulkhead_split']))
             print(points_to_poly(points, tx=tx,ty=ty))
-            make_notched_bulkhead(points, bulkhead, uppers,tx,ty, side='top')
+            make_notched_bulkhead(points, bulkhead['bulkhead_split'], bulkhead['top_notches'],tx,ty, side='top')
 
             a = uppers['width']*1.05
             b = a*-.55
@@ -889,7 +900,7 @@ for i in range(len(s.get_bulkheads())):
                 c = b-2.2
                 print(points_to_poly(round_corners(points, b,a,c), tx=tx,ty=ty))
 
-                make_notched_bulkhead(points, bulkhead, lowers,tx,ty)
+            make_notched_bulkhead(points, bulkhead['bulkhead_split'], bulkhead['bottom_notches'],tx,ty)
             print(points_to_poly(points, tx=tx,ty=ty))
         
 

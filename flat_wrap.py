@@ -4,6 +4,29 @@ import shapely
 def split(a,b):
     return a + ((b-a)/2)
 
+
+def polyline_point_after_distance(line,total_length):
+    print(line)
+    if len(line) < 2:
+        return 0
+    else:
+        length = 0
+        for i in range(len(line)-1):
+            length += distance(line[i],line[i+1])
+            if length > total_length:
+                return i
+        return None
+
+def polyline_distance(line):
+    if len(line) < 2:
+        return 0
+    else:
+        length = 0
+        for i in range(len(line)-1):
+            length += distance(line[i],line[i+1])
+        return length
+
+
 def flat_box(coords,shapes,tabs,tx=0,ty=0):
     base = shapes[0]
     flattened = {shapes[0][1]:(distance(coords[shapes[0][0]],
@@ -335,11 +358,10 @@ def fancy_notch(angle, center, length, spread):
     points.append((center[0]+(math.sin(angle+spread)*length),
                   center[1]+(math.cos(angle+spread)*length)))
     
-    return round_corners(points,.25)
+    return round_corners(points,.15)
 
 # subtract b from a
 def difference(a,b):
-    print('x')
     pa = shapely.Polygon(a)
     pb = shapely.Polygon(b)
     pc = shapely.difference(pa,pb,grid_size=.01)
@@ -354,25 +376,70 @@ def simplify(a):
     return list(zip(*pa.exterior.coords.xy))
 
 
-def make_notched_bulkhead(points, bulkhead, ellipse,tx,ty, side='bottom'):
+
+# well, not really a line, more like holes on a polyline (typically an arc)
+def holes_on_a_line(line, end_margin, min_distance,tx,ty):
+    # rivet hole spacing
+    arc_distance = polyline_distance(line)
+    available_arc = arc_distance-(end_margin*2)
+    num_holes = math.floor(available_arc/min_distance)
+    distance_between_holes = available_arc/(num_holes+1)
+    holes = []
+
+    if num_holes == 1:
+        holes.append(end_margin+(available_arc/2))
+    if num_holes == 2:
+        holes.append(end_margin)
+        holes.append(arc_distance-end_margin)
+    if num_holes == 3:
+        holes.append(end_margin)
+        holes.append(end_margin+(available_arc/2))
+        holes.append(arc_distance-end_margin)
+
+    for hole in holes:
+        # TODO: find position on line
+        circle = shapely.Point(*line[0]).buffer(.2)
+    print(f'distance = {arc_distance} available_arc = {available_arc} num_holes = {num_holes} holes = {holes}')
+        
+
+def make_notched_bulkhead(points, split, notches,tx,ty, side='bottom'):
+    def place_notch(p1,p2):
+        angle = math.atan2(points[p1][0]-points[p2][0], 
+                           points[p1][1]-points[p2][1])+(math.pi/2)
+        if side == 'bottom':
+            setback_point = (points[p2][0]+(math.sin(angle-math.pi)*.25),
+                             points[p2][1]+(math.cos(angle-math.pi)*.25))
+            notch1 = fancy_notch(math.atan2(points[p1][0]-points[p2][0], 
+                                            points[p1][1]-points[p2][1]) + (math.pi/2),
+                                 setback_point,2,.15)
+        else:
+            setback_point = (points[p2][0]-(math.sin(angle-math.pi)*.25),
+                             points[p2][1]-(math.cos(angle-math.pi)*.25))
+            notch1 = fancy_notch(math.atan2(points[p1][0]-points[p2][0], 
+                                            points[p1][1]-points[p2][1]) - (math.pi/2),
+                                 setback_point,2,.15)
+        return notch1
+
     # (outside) sheet metal cutout, including flanges/notches
     bulkhead_shape = simplify(round_corners(points, .75))
 
     #print(points_to_poly(round_corners(points, .75), tx=tx,ty=ty))
+   
     
-
+    skip = notches[0] if len(notches) > 0 else 0
     # remove the bottom/top corners
     if side == 'bottom':
-        left_corner  = ((ellipse['width']*-1.0-1, bulkhead['bulkhead_split']-.375),
-                        (ellipse['width']*-1.0-1, bulkhead['bulkhead_split']+1),
-                        (ellipse['width']*-1.0+.375, bulkhead['bulkhead_split']+1),
-                        (ellipse['width']*-1.0+.25, bulkhead['bulkhead_split']-.25))
+        left_corner  = ((points[0][0]*-1.0-1, split-.375),
+                        (points[0][0]*-1.0-1, split+1),
+                        (points[0][0]*-1.0+.375, split+1),
+                        (points[0][0]*-1.0+.25, split-.25))
     else:
-        left_corner  = ((ellipse['width']*-1.0-1, bulkhead['bulkhead_split']+.375),
-                        (ellipse['width']*-1.0-1, bulkhead['bulkhead_split']-1),
-                        (ellipse['width']*-1.0+.375, bulkhead['bulkhead_split']-1),
-                        (ellipse['width']*-1.0+.25, bulkhead['bulkhead_split']+.25))
+        left_corner  = ((points[0][0]*-1.0-1, split+.375),
+                        (points[0][0]*-1.0-1, split-1),
+                        (points[0][0]*-1.0+.375, split-1),
+                        (points[0][0]*-1.0+.25, split+.25))
     
+    # copy/mirror the left bottom corner 
     right_corner = [(i[0]*-1,i[1]) for i in left_corner]
 
     #print(points_to_poly(round_corners(left_corner,.25), tx=tx, ty=ty))
@@ -387,30 +454,35 @@ def make_notched_bulkhead(points, bulkhead, ellipse,tx,ty, side='bottom'):
     bulkhead_shape = difference(bulkhead_shape,right_corner)
 
     #print(points_to_poly(top_notch,tx=tx,ty=ty))
-    for i in range(1,len(points)//2,40):
-        angle = math.atan2(points[i-1][0]-points[i][0], 
-                           points[i-1][1]-points[i][1])+(math.pi/2)
-        if side == 'bottom':
-            setback_point = (points[i][0]+(math.sin(angle-math.pi)*.25),
-                             points[i][1]+(math.cos(angle-math.pi)*.25))
-            notch1 = fancy_notch(math.atan2(points[i-1][0]-points[i][0], 
-                                            points[i-1][1]-points[i][1]) + (math.pi/2),
-                                 setback_point,2,.15)
-        else:
-            setback_point = (points[i][0]-(math.sin(angle-math.pi)*.25),
-                             points[i][1]-(math.cos(angle-math.pi)*.25))
-            notch1 = fancy_notch(math.atan2(points[i-1][0]-points[i][0], 
-                                            points[i-1][1]-points[i][1]) - (math.pi/2),
-                                 setback_point,2,.15)
+
+    prev_p   = skip
+    cur_p    = 0
+    next_end = 0
+
+
+
+
+
+    #while next_end != None and cur_p+next_end < len(points)//2-10:
+    for notch_distance in notches:
+        cur_p = prev_p + next_end 
+
+        notch1 = place_notch(cur_p-1,cur_p)
         notch2 = [(i[0]*-1,i[1]) for i in notch1]
-        
+
+        holes_on_a_line(points[prev_p:cur_p], .6, .2,tx,ty)
+
         bulkhead_shape = difference(bulkhead_shape,notch1)
         bulkhead_shape = difference(bulkhead_shape,notch2)
-        print(points_to_poly(notch1,tx=tx,ty=ty))
-        print(points_to_poly(notch2,tx=tx,ty=ty))
+        
+        next_end = polyline_point_after_distance(points[cur_p:len(points)//2],notch_distance)
+        
+        prev_p = cur_p
+
+
+
     print(points_to_poly(simplify(round_corners(bulkhead_shape,-.05,.1,-.05)),tx=tx,ty=ty)) 
     print(points_to_poly(bulkhead_shape,color="red",tx=tx,ty=ty)) 
-
 
 
 def connecting_strip(centerline, edges, width, skip, tx=0,ty=0, flat_ends=False):
