@@ -129,10 +129,10 @@ top_notches     = [ [],              [0,2,2],         [],              [],      
                     [1,3,3,3,2],     [1,3,3,2,2],     [1,3,3,2,1],     [],              [],
                     [], [] ]
 
-bottom_notches  = [ [],              [1,2,2,2,2],     [1,1.5,2,2,2],     [1,1.5,1.5,2,2,2],   [1,1.5,1.5,2,2,3],
-                    [1,1.5,1.5,2,2,3],   [1,1.5,1.5,2,3,3],   [1,1.5,1.5,2,3,3,3], [1,1.5,1.5,2,3,3,3], [0,1.5,1.5,2,3,3,3],
-                    [],              [1,1.5,1.5,2,3,3,3], [1,1.5,1.5,2,3,3],   [1,1.5,2,3,3],     [1,1.5,2,2,3],
-                    [0,1.5,2,3],       [0,1.5,1.5,2],       [1,1.5,1.5,1.5],       [],              [],
+bottom_notches  = [ [],                [1,2,2,2,2],         [1,1.5,2,2,2],       [1,1.5,1.5,2,2,2],   [1,1.5,1.5,2,2,3],
+                   [1,1.5,1.5,2,2,3], [1,1.5,1.5,2,3,3],   [1,1.5,1.5,2,3,3,3], [1,1.5,1.5,2,3,3,3], [1,1.5,1.5,2,3,3,3],
+                   [],                [1,1.5,1.5,2,3,3,3], [0,1.5,1.5,2,3,3],   [0,1.5,2,3,3],       [0,2,2,2,3],
+                    [0,1.5,2,3],       [0,1.5,1.5,2],       [1,1.5,1.5,1.5],     [],                  [],
                     [], [] ]
 
 
@@ -856,9 +856,9 @@ for i in range(len(s.get_bulkheads())):
         if bulkhead['bulkhead_split']:
             points.append((uppers['width']*-1.0,
                           bulkhead['bulkhead_split']))
-            points.append((uppers['width'],
+            points.insert(0,(uppers['width'],
                           bulkhead['bulkhead_split']))
-            print(points_to_poly(points, tx=tx,ty=ty))
+            print(points_to_poly(points, tx=tx,ty=ty, color="green"))
             make_notched_bulkhead(points, bulkhead['bulkhead_split'], bulkhead['top_notches'],tx,ty, side='top')
 
             a = uppers['width']*1.05
@@ -871,7 +871,7 @@ for i in range(len(s.get_bulkheads())):
         if uppers['width'] and uppers['vertical_center']:
             points.append((uppers['width'],
                            uppers['vertical_center']))
-            points.append((uppers['width']*-1.0,
+            points.insert(0,(uppers['width']*-1.0,
                            uppers['vertical_center']))
 
     lowers = s.get_lower_ellipse(i)
@@ -891,7 +891,7 @@ for i in range(len(s.get_bulkheads())):
             else:
                 points.append((uppers['width']*-1.0,
                               bulkhead['bulkhead_split']))
-                points.append((uppers['width'],
+                points.insert(0,(uppers['width'],
                               bulkhead['bulkhead_split']))
                 
                 # center cutout

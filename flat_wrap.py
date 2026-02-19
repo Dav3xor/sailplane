@@ -5,16 +5,60 @@ def split(a,b):
     return a + ((b-a)/2)
 
 
+# finds a point at distance
+# from point a towards point b (2d)
+def point_on_a_line(a,b,length):
+    distance_between = distance(a,b)
+    vector = ((b[0]-a[0])/distance_between,
+              (b[1]-a[1])/distance_between)
+    return (a[0] + (length*vector[0]),
+            a[1] + (length*vector[1]))
+
+def point_along_polyline(line,distance):
+    stuff = polyline_point_after_distance(line,distance)
+    if stuff:
+        p2, cur_distance = stuff
+        #print(stuff)
+        #print("+")
+        p1 = p2-1
+        #print(f'{p1} - {p2} {distance} {cur_distance}')
+        return point_on_a_line(line[p1],line[p2],cur_distance)
+    else:
+        #print("-")
+        return None
+
+def points_along_polyline(line,margin,num_points):
+    total_length     = polyline_distance(line)
+    cur_pos          = margin
+    available_length = total_length-(margin*2)
+    segment_length   = available_length/(num_points-1)
+    points = []
+    for point in range(num_points):
+        p = point_along_polyline(line,cur_pos)
+        if p:
+            #print('+')
+            cur_pos    += segment_length
+            points.append(p)
+        #else:
+            #print('-')
+    return points
+
+# this is the old function, TODO: remove
 def polyline_point_after_distance(line,total_length):
-    print(line)
+    #print(line)
     if len(line) < 2:
+        #print('a')
         return 0
     else:
         length = 0
         for i in range(len(line)-1):
-            length += distance(line[i],line[i+1])
-            if length > total_length:
-                return i
+            cur_len = distance(line[i],line[i+1])
+            if length+cur_len > total_length:
+                #print(f'b{i}')
+                #TODO problem seems to be here
+                return i+1, total_length-length#-cur_len
+            length+=cur_len
+        #print('c')
         return None
 
 def polyline_distance(line):
@@ -144,7 +188,8 @@ def distance3(dx,dy,dz):
 def distance2(dx,dy):
     return math.sqrt(dx**2 + dy**2)
 
-
+    
+# this is currently used to place ribs along the wing...
 def points_on_a_line(a,b,num_divisions):
     # beware fenceposting, with a num_divisions of 4, you get 3 divisions.
     #
@@ -225,17 +270,9 @@ def ellipse_point(angle, e):
 def make_unit_ellipse(e, numsteps = 100, flip=False, mode=1):
     points = []
     flip = -1.0 if flip else 1.0
+    step_angle = (math.tau*e['amount'])/(numsteps-1)
     for step in range(numsteps):
-        step_angle = (2*3.14159*e['amount'])/(numsteps-1)
         angle = step * step_angle
-        #if mode == 1:
-        #    points.append(( e['datum'],
-        #                    (math.sin(angle)*e['height']*flip)+e['vertical_center'],
-        #                    (math.cos(angle)*e['width'])+e['horizontal_center']))
-        #if mode == 2:
-        #    points.append(( (math.sin(angle)*e['height']*flip) + e['datum'],
-        #                    e['vertical_center'],
-        #                    (math.cos(angle)*e['width']) + e['horizontal_center']))
         if mode == 1:
             points.append(( 0,
                             (math.sin(angle)*e['height']*flip),
@@ -244,7 +281,9 @@ def make_unit_ellipse(e, numsteps = 100, flip=False, mode=1):
             points.append(( (math.sin(angle)*e['height']*flip),
                             0,
                             (math.cos(angle)*e['width'])))
-
+        if mode == 3:
+            points.append(( (math.sin(angle)*e['height']*flip),
+                            (math.cos(angle)*e['width'])))
     return points
 
 def make_ellipse(e, numsteps=100, flip=False, mode=1):
@@ -380,26 +419,39 @@ def simplify(a):
 # well, not really a line, more like holes on a polyline (typically an arc)
 def holes_on_a_line(line, end_margin, min_distance,tx,ty):
     # rivet hole spacing
+    rline = line.copy()
+    rline.reverse()
     arc_distance = polyline_distance(line)
-    available_arc = arc_distance-(end_margin*2)
-    num_holes = math.floor(available_arc/min_distance)
-    distance_between_holes = available_arc/(num_holes+1)
-    holes = []
+    if arc_distance:
+        available_arc = arc_distance-(end_margin*2)
+        num_holes = math.floor(available_arc/min_distance)
+        if num_holes < 1:
+            num_holes = 1
+        distance_between_holes = available_arc/(num_holes+1)
+        holes = []
+        if num_holes == 1:
+            holes.append(line[polyline_point_after_distance(line, arc_distance/2)[0]])
+        if num_holes == 2:
+            holes.append(line[polyline_point_after_distance(line, end_margin)[0]])
+            holes.append(rline[polyline_point_after_distance(rline, end_margin)[0]])
+            #holes.append(end_margin)
+            #holes.append(arc_distance-end_margin)
+        if num_holes == 3:
+            holes.append(line[polyline_point_after_distance(line, end_margin)[0]])
+            holes.append(rline[polyline_point_after_distance(rline, end_margin)[0]])
+            holes.append(line[polyline_point_after_distance(line, arc_distance/2)[0]])
 
-    if num_holes == 1:
-        holes.append(end_margin+(available_arc/2))
-    if num_holes == 2:
-        holes.append(end_margin)
-        holes.append(arc_distance-end_margin)
-    if num_holes == 3:
-        holes.append(end_margin)
-        holes.append(end_margin+(available_arc/2))
-        holes.append(arc_distance-end_margin)
+            #holes.append(end_margin)
+            #holes.append(end_margin+(available_arc/2))
+            #holes.append(arc_distance-end_margin)
 
-    for hole in holes:
-        # TODO: find position on line
-        circle = shapely.Point(*line[0]).buffer(.2)
-    print(f'distance = {arc_distance} available_arc = {available_arc} num_holes = {num_holes} holes = {holes}')
+        for hole in holes:
+            print(hole)
+            # TODO: find position on line
+            circle = shapely.Point(hole).buffer(.125)
+            points = list(zip(*circle.exterior.coords.xy))
+            print(points_to_poly(points, tx=tx, ty=ty))
+        print(f'distance = {arc_distance} available_arc = {available_arc} num_holes = {num_holes} holes = {holes}')
         
 
 def make_notched_bulkhead(points, split, notches,tx,ty, side='bottom'):
@@ -407,18 +459,19 @@ def make_notched_bulkhead(points, split, notches,tx,ty, side='bottom'):
         angle = math.atan2(points[p1][0]-points[p2][0], 
                            points[p1][1]-points[p2][1])+(math.pi/2)
         if side == 'bottom':
-            setback_point = (points[p2][0]+(math.sin(angle-math.pi)*.25),
-                             points[p2][1]+(math.cos(angle-math.pi)*.25))
+            setback_point = (points[p1][0]+(math.sin(angle-math.pi)*.25),
+                             points[p1][1]+(math.cos(angle-math.pi)*.25))
             notch1 = fancy_notch(math.atan2(points[p1][0]-points[p2][0], 
                                             points[p1][1]-points[p2][1]) + (math.pi/2),
                                  setback_point,2,.15)
         else:
-            setback_point = (points[p2][0]-(math.sin(angle-math.pi)*.25),
-                             points[p2][1]-(math.cos(angle-math.pi)*.25))
+            setback_point = (points[p1][0]-(math.sin(angle-math.pi)*.25),
+                             points[p1][1]-(math.cos(angle-math.pi)*.25))
             notch1 = fancy_notch(math.atan2(points[p1][0]-points[p2][0], 
                                             points[p1][1]-points[p2][1]) - (math.pi/2),
                                  setback_point,2,.15)
-        return notch1
+        notch2 = [(i[0]*-1,i[1]) for i in notch1]
+        return notch1,notch2
 
     # (outside) sheet metal cutout, including flanges/notches
     bulkhead_shape = simplify(round_corners(points, .75))
@@ -462,20 +515,22 @@ def make_notched_bulkhead(points, split, notches,tx,ty, side='bottom'):
 
 
 
+    notch1,notch2  = place_notch(cur_p,cur_p+1)
+    bulkhead_shape = difference(bulkhead_shape,notch1)
+    bulkhead_shape = difference(bulkhead_shape,notch2)
 
     #while next_end != None and cur_p+next_end < len(points)//2-10:
-    for notch_distance in notches:
+    for notch_distance in notches[1:]:
+        next_end = polyline_point_after_distance(points[cur_p:len(points)//2],notch_distance)[0]
         cur_p = prev_p + next_end 
 
-        notch1 = place_notch(cur_p-1,cur_p)
-        notch2 = [(i[0]*-1,i[1]) for i in notch1]
+        notch1,notch2 = place_notch(cur_p-1,cur_p)
 
-        holes_on_a_line(points[prev_p:cur_p], .6, .2,tx,ty)
+        holes_on_a_line(points[prev_p:cur_p], .6, .3,tx,ty)
 
         bulkhead_shape = difference(bulkhead_shape,notch1)
         bulkhead_shape = difference(bulkhead_shape,notch2)
         
-        next_end = polyline_point_after_distance(points[cur_p:len(points)//2],notch_distance)
         
         prev_p = cur_p
 
