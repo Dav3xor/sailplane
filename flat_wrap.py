@@ -1,74 +1,15 @@
 import math
 import shapely
-
+from geometry import *
+from rivets import *
 def split(a,b):
     return a + ((b-a)/2)
 
 
-# finds a point at distance
-# from point a towards point b (2d)
-def point_on_a_line(a,b,length):
-    distance_between = distance(a,b)
-    vector = ((b[0]-a[0])/distance_between,
-              (b[1]-a[1])/distance_between)
-    return (a[0] + (length*vector[0]),
-            a[1] + (length*vector[1]))
 
-def point_along_polyline(line,distance):
-    stuff = polyline_point_after_distance(line,distance)
-    if stuff:
-        p2, cur_distance = stuff
-        #print(stuff)
-        #print("+")
-        p1 = p2-1
-        #print(f'{p1} - {p2} {distance} {cur_distance}')
-        return point_on_a_line(line[p1],line[p2],cur_distance)
-    else:
-        #print("-")
-        return None
 
-def points_along_polyline(line,margin,num_points):
-    total_length     = polyline_distance(line)
-    cur_pos          = margin
-    available_length = total_length-(margin*2)
-    segment_length   = available_length/(num_points-1)
-    points = []
-    for point in range(num_points):
-        p = point_along_polyline(line,cur_pos)
-        if p:
-            #print('+')
-            cur_pos    += segment_length
-            points.append(p)
-        #else:
-            #print('-')
-    return points
 
-# this is the old function, TODO: remove
-def polyline_point_after_distance(line,total_length):
-    #print(line)
-    if len(line) < 2:
-        #print('a')
-        return 0
-    else:
-        length = 0
-        for i in range(len(line)-1):
-            cur_len = distance(line[i],line[i+1])
-            if length+cur_len > total_length:
-                #print(f'b{i}')
-                #TODO problem seems to be here
-                return i+1, total_length-length#-cur_len
-            length+=cur_len
-        #print('c')
-        return None
 
-def polyline_distance(line):
-    if len(line) < 2:
-        return 0
-    else:
-        length = 0
-        for i in range(len(line)-1):
-            length += distance(line[i],line[i+1])
-        return length
 
 
 def flat_box(coords,shapes,tabs,tx=0,ty=0):
@@ -122,73 +63,8 @@ def flat_box(coords,shapes,tabs,tx=0,ty=0):
                    (l[1][0]+tx,l[1][1]+ty)) for l in fold_lines]
     return perimeter,fold_lines
 
-# trilateration:
-# https://github.com/noomrevlis/trilateration/blob/master/trilateration2D.py
-def get_intersections(p1, r1, p2, r2):
-    # circle 1: (x0, y0), radius r0
-    # circle 2: (x1, y1), radius r1
-
-    #d=math.sqrt((p2[0]-p1[0])**2 + (p2[1]-p1[1])**2)
-    d = distance(p2,p1)
-
-    # non intersecting
-    if d > r1 + r2 :
-        print("non intersecting")
-        return None
-    # One circle within other
-    if d < abs(r1-r2):
-        print(f"within d={d} r1={r1} r2={r2}")
-        return None
-    # coincident circles
-    if d == 0 and r1 == r2:
-        print("coincident")
-        return None
-    else:
-        a = (pow(r1, 2) - pow(r2, 2) + pow(d, 2)) / (2*d)
-        h  = math.sqrt(pow(r1, 2) - pow(a, 2))
-        x0 = p1[0] + a*(p2[0] - p1[0])/d 
-        y0 = p1[1] + a*(p2[1] - p1[1])/d
-        rx = -(p2[1] - p1[1]) * (h/d)
-        ry = -(p2[0] - p1[0]) * (h / d)
-        return ((x0+rx, y0-ry), (x0-rx, y0+ry))
-
-def isleft(a, b, c):
-  return (b[0] - a[0])*(c[1] - a[1]) - (b[1] - a[1])*(c[0] - a[0]) > 0;
-  return (b.x - a.x)*(c.y - a.y) - (b.y - a.y)*(c.x - a.x) > 0;
-
-def find_pointl(a,b,A,B):
-    points = get_intersections(a,A,b,B)
-    if points:
-        return points[0] if isleft(a,b,points[0]) else points[1]
-    else:
-        print("?")
-        5/0
-
-def find_pointr(a,b,A,B):
-    points = get_intersections(a,A,b,B)
-    if points:
-        return points[1] if isleft(a,b,points[0]) else points[0]
-    else:
-        print("?")
-        5/0
 
 
-
-
-def distance(a,b):
-    if len(a) != len(b):
-        5/0
-    if len(a) == 3:
-        return distance3(a[0]-b[0], a[1]-b[1],a[2]-b[2])
-    if len(a) == 2:
-        return distance2(a[0]-b[0], a[1]-b[1])
-def distance3(dx,dy,dz):
-    return math.sqrt(dx**2 + dy**2 + dz**2)
-
-def distance2(dx,dy):
-    return math.sqrt(dx**2 + dy**2)
-
-    
 # this is currently used to place ribs along the wing...
 def points_on_a_line(a,b,num_divisions):
     # beware fenceposting, with a num_divisions of 4, you get 3 divisions.
@@ -244,79 +120,6 @@ print('<svg width="200in" height="200in" viewBox="0 0 200 200" viewboxxmlns="htt
 
 
 
-
-def quarter_round(radius,zangle=0):
-    a = []
-    for i in range(10):
-        angle = (90/10*i)*2*3.14159/360
-        x=0
-        y=math.cos(angle)*radius
-        z=math.sin(angle)*radius
-        a.append((x,y,z))
-    return a
-def rotatez(points, angle):
-    rotated = []
-    for point in points:
-        newpoint = (point[0]*math.cos(angle) - point[1]*math.sin(angle),
-                    point[0]*math.sin(angle) + point[1]*math.cos(angle),
-                    point[2])
-        rotated.append(newpoint)     
-    return rotated
-def ellipse_point(angle, e):
-    x = math.sin(angle)*e['height']
-    y = math.cos(angle)*e['width']
-    return 0,x,y
-
-def make_unit_ellipse(e, numsteps = 100, flip=False, mode=1):
-    points = []
-    flip = -1.0 if flip else 1.0
-    step_angle = (math.tau*e['amount'])/(numsteps-1)
-    for step in range(numsteps):
-        angle = step * step_angle
-        if mode == 1:
-            points.append(( 0,
-                            (math.sin(angle)*e['height']*flip),
-                            (math.cos(angle)*e['width'])))
-        if mode == 2:
-            points.append(( (math.sin(angle)*e['height']*flip),
-                            0,
-                            (math.cos(angle)*e['width'])))
-        if mode == 3:
-            points.append(( (math.sin(angle)*e['height']*flip),
-                            (math.cos(angle)*e['width'])))
-    return points
-
-def make_ellipse(e, numsteps=100, flip=False, mode=1):
-    ellipse = make_unit_ellipse(e,numsteps,flip,mode)
-    translate_poly(ellipse, e['datum'], e['vertical_center'], e['horizontal_center'])
-    return ellipse
-
-def translate_point(p, x, y, z):
-    return (p[0]+x, p[1]+y, p[2]+z)
-def translate_poly(p, x, y, z):
-    for i in range(len(p)):
-        p[i] = translate_point(p[i],x,y,z)
-
-def adjust_ellipse(a,b_old,ea,eb, numsteps=100):
-    step_angle = (2*3.14159*ea['amount'])/(numsteps-1)
-    b = b_old.copy()
-    cur_angles = [i*step_angle for i in range(len(a))]
-    for j in range(20):
-        #print('---')
-        for i in range(len(a)):
-            aa = math.atan2(a[i][2], a[i][1])
-            ab = math.atan2(b[i][2],b[i][1])
-            
-            difference = (aa-ab)
-            if abs(difference) > .0001:
-                cur_angles[i] = cur_angles[i] - (difference / 1.2)
-                b[i] = ellipse_point(cur_angles[i],eb)
-            #print(f'aa={aa} ab={ab} aa-ab={aa-ab}')
-    
-    print(points_to_poly(b_old,xindex=1,yindex=2, color="blue"))
-    print(points_to_poly(a,xindex=1,yindex=2, color="red"))
-    print(points_to_poly(b,xindex=1,yindex=2, color="green"))
-    return b
         
 def ellipses(ellipses, hoffset=0, numsteps = 100, flip=False):
     for e in ellipses:
@@ -362,6 +165,7 @@ def ellipses(ellipses, hoffset=0, numsteps = 100, flip=False):
                         b_flat, 
                         True if ( 'flat_ends' in ellipses[i] and ellipses[i]['flat_ends'] == True) else False))        
     return results
+
 
 def make_tab(a,b,width=.75,tilt=.2, flip=False):
     base_angle = math.atan2(a[0]-b[0],a[1]-b[1])
@@ -415,44 +219,6 @@ def simplify(a):
     return list(zip(*pa.exterior.coords.xy))
 
 
-
-# well, not really a line, more like holes on a polyline (typically an arc)
-def holes_on_a_line(line, end_margin, min_distance,tx,ty):
-    # rivet hole spacing
-    rline = line.copy()
-    rline.reverse()
-    arc_distance = polyline_distance(line)
-    if arc_distance:
-        available_arc = arc_distance-(end_margin*2)
-        num_holes = math.floor(available_arc/min_distance)
-        if num_holes < 1:
-            num_holes = 1
-        distance_between_holes = available_arc/(num_holes+1)
-        holes = []
-        if num_holes == 1:
-            holes.append(line[polyline_point_after_distance(line, arc_distance/2)[0]])
-        if num_holes == 2:
-            holes.append(line[polyline_point_after_distance(line, end_margin)[0]])
-            holes.append(rline[polyline_point_after_distance(rline, end_margin)[0]])
-            #holes.append(end_margin)
-            #holes.append(arc_distance-end_margin)
-        if num_holes == 3:
-            holes.append(line[polyline_point_after_distance(line, end_margin)[0]])
-            holes.append(rline[polyline_point_after_distance(rline, end_margin)[0]])
-            holes.append(line[polyline_point_after_distance(line, arc_distance/2)[0]])
-
-            #holes.append(end_margin)
-            #holes.append(end_margin+(available_arc/2))
-            #holes.append(arc_distance-end_margin)
-
-        for hole in holes:
-            print(hole)
-            # TODO: find position on line
-            circle = shapely.Point(hole).buffer(.125)
-            points = list(zip(*circle.exterior.coords.xy))
-            print(points_to_poly(points, tx=tx, ty=ty))
-        print(f'distance = {arc_distance} available_arc = {available_arc} num_holes = {num_holes} holes = {holes}')
-        
 
 def make_notched_bulkhead(points, split, notches,tx,ty, side='bottom'):
     def place_notch(p1,p2):
@@ -593,62 +359,6 @@ def connecting_strip(centerline, edges, width, skip, tx=0,ty=0, flat_ends=False)
 
     print(points_to_poly(a+b, tx=tx,ty=ty))
 
-def connecting_strip_old(centerline, edges, width, skip, tx=0,ty=0, flat_ends=False):
-    a = []
-    b = []
-    
-   
-    if not flat_ends:
-        a.append(centerline[0])
-        start = 1
-        end = len(centerline)-1
-    else:
-        start = 2
-        end = len(centerline)-2
-        a+=make_tab(centerline[0],centerline[1],width=5)
-
-    for i in range(start, end):
-        p1 = centerline[i]
-        p2 = centerline[i+1]
-        angle = math.atan2(p1[0]-p2[0], p1[1]-p2[1])
-        if i % skip:
-            a.append((p1[0]+width*math.sin(angle+(math.pi/2)),
-                      p1[1]+width*math.cos(angle+(math.pi/2))))
-        else:
-            a.append((p1[0]+(width/10)*math.sin(angle-(math.pi/2)),
-                      p1[1]+(width/10)*math.cos(angle-(math.pi/2))))
-        b.append((p1[0]+width*math.sin(angle-(math.pi/2)),
-                  p1[1]+width*math.cos(angle-(math.pi/2))))
-    if flat_ends:
-        a.append(make_tab(centerline[-2],centerline[-1],width=.1))
-    else:
-        a.append(centerline[-1])
-    b.reverse()
-    poly = shapely.Polygon(a+b)
-    #poly = poly.buffer(.05, cap_style=3).buffer(-.05, join_style=1)
-    #poly = poly.buffer(-0.1).buffer(.2).buffer(-0.1)
-    poly = poly.buffer(-.1)
-    points = list(zip(*poly.exterior.coords.xy))
-    print(points_to_poly(points, tx=tx,ty=ty))
-    
-    for edge in edges:
-        points = []
-        poly = ''
-        angle = math.atan2(edge[0][0]-edge[1][0], edge[0][1]-edge[1][1])
-        points.append((edge[0][0]+width*math.sin(angle+(math.pi/2))+tx,
-                  edge[0][1]+width*math.cos(angle+(math.pi/2))+ty))
-        points.append((edge[0][0]+width*math.sin(angle-(math.pi/2))+tx,
-                  edge[0][1]+width*math.cos(angle-(math.pi/2))+ty))
-        points.append((edge[1][0]+width*math.sin(angle-(math.pi/2))+tx,
-                  edge[1][1]+width*math.cos(angle-(math.pi/2))+ty))
-        points.append((edge[1][0]+width*math.sin(angle+(math.pi/2))+tx,
-                  edge[1][1]+width*math.cos(angle+(math.pi/2))+ty))
-        print(points_to_poly(points, tx=0,ty=0))
-        
-
-
-    return a+b
-        
 
 
 
@@ -661,32 +371,6 @@ def expand_airfoil(airfoil,chord,datum, sweep):
     return points
 
 
-def points_to_circles(points, radius, width = '.1', units = ''):
-    output = ''
-    for point in points:
-        output += f'<circle r="{radius}{units}" cx="{point[0]}{units}" cy="{point[1]}{units}"  stroke="black" stroke-width="{width}{units}" fill="none" />\n'
-    return output
-
-def points_to_poly(points,xindex=0,yindex=1,tx=0.0,ty=0.0, color='black', dash=None,polyline=False):
-    poly = ''
-    for point in points:
-        try:
-            poly += f'{point[xindex]+tx},{point[yindex]+ty} \n'
-        except:
-            print(points)
-            5/0
-    if dash:
-        dash = f"stroke-dasharray='{dash}'" # svg format --> 0.5, 0.5
-    else:
-        dash = ''
-
-    if polyline:
-        return f'<polyline stroke-width="0.1" {dash} fill="none" stroke="{color}" points="{poly}" />'
-    else:
-        return f'<polygon stroke-width="0.1" fill="none" stroke="{color}" points="{poly}" />'
-
-def points_to_line(p1,p2):
-    return f'<line x1="{p1[0]}" y1="{p1[1]}" x2="{p2[0]}" y2="{p2[1]}" style="stroke:black;stroke-width:0.1" />'
 
 # location is 'top' 'bottom' or 'both'
 # TODO: properly handle location when applicable

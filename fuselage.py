@@ -1,5 +1,6 @@
 import math 
 from flat_wrap import * # general dimensions:
+from rivets import *
 import numpy as np
 import matplotlib.pyplot as plt
 
