@@ -3,28 +3,43 @@ import math
 
 class Polygon:
     def __init__(self, points=[],color='black',dash=None,xindex=0, yindex=1, tx=0,ty=0,closed=True):
-        self.points = points
+        self.points = points.copy()
         self.closed = True
-        self.tx     = tx
-        self.ty     = ty
         self.xindex = xindex
         self.yindex = yindex
         self.color  = color
         self.dash   = dash
+    def copy(self):
+        return Polygon(self.points.copy())
+    def translate(self,tx,ty):
+        self.points = [(i[0]+tx,i[1]+ty) for i in self.points]
+        return self
 
-    def move(self,tx,ty):
-        self.tx     = tx
-        self.ty     = ty
+    def reverse(self):
+        self.points.reverse()
 
     def __getitem__(self, key):
         return self.points[key]
+
     def __setitem__(self, key, value):
         self.points[key] = value
+
+    def __add__(self, other):
+        if type(other) in [list,tuple]:
+            return Polygon(self.points+list(other))
+        elif type(other) == Polygon:
+            return Polygon(self.points+other.points)
+        else:
+            raise Exception
+
+    def __len__(self):
+        return len(self.points)
+
     def __repr__(self):
         poly = ''
         for point in self.points:
             try:
-                poly += f'{point[self.xindex]+self.tx},{point[self.yindex]+self.ty} \n'
+                poly += f'{point[self.xindex]},{point[self.yindex]} \n'
             except:
                 print(self.points)
                 5/0
@@ -37,25 +52,28 @@ class Polygon:
             return f'<polygon stroke-width="0.1" fill="none" stroke="{self.color}" points="{poly}" />'
         else:
             return f'<polyline stroke-width="0.1" {dash} fill="none" stroke="{self.color}" points="{poly}" />'
+
     def mirrorz(self):
         points2 = []
         for i in self.points:
             points2.append(i)
             points2.append((i[0],i[1],i[2]*-1.0))
         return points2
+
     def append(self,point):
         self.points.append(point)
+
     def prepend(self,point):
         self.points = [point] + self.points
 
-#def parallel(a,b):
-#    Polygon p()
-#    for i in range(max(len(a),len(b))):
-#        if i < len(a):
-#            p.append(a[i])
-#        if i < len(b):
-#            p.append(b[i])
-#    return points2
+def parallel(a,b):
+    p = Polygon()
+    for i in range(max(len(a),len(b))):
+        if i < len(a):
+            p.append(a[i])
+        if i < len(b):
+            p.append(b[i])
+    return p
 
 def distance(a,b):
     if len(a) != len(b):
@@ -144,7 +162,7 @@ def ellipse_point(angle, e):
     return 0,x,y
 
 def make_unit_ellipse(e, numsteps = 100, flip=False, mode=1):
-    points = []
+    points = Polygon()
     flip = -1.0 if flip else 1.0
     step_angle = (math.tau*e['amount'])/(numsteps-1)
     for step in range(numsteps):

@@ -18,7 +18,7 @@ def flat_box(coords,shapes,tabs,tx=0,ty=0):
                                coords[shapes[0][1]]),0),
                  shapes[0][0]:(0,0)} 
     cur_perimeter = [flattened[shapes[0][0]],flattened[shapes[0][1]]]
-    perimeter = []
+    perimeter = Polygon()
     fold_lines = []
     for shape in shapes:
         print(shape)
@@ -57,8 +57,10 @@ def flat_box(coords,shapes,tabs,tx=0,ty=0):
     #poly = poly.buffer(.1)
     #poly = poly.buffer(-.2)
     #poly = poly.buffer(.1)
-    perimeter = list(zip(*poly.exterior.coords.xy))
-    perimeter = [(p[0]+tx,p[1]+ty) for p in perimeter]
+    perimeter = Polygon(list(zip(*poly.exterior.coords.xy)))
+    perimeter.translate(tx,ty)
+                
+    #perimeter = [(p[0]+tx,p[1]+ty) for p in perimeter]
     fold_lines = [((l[0][0]+tx,l[0][1]+ty),
                    (l[1][0]+tx,l[1][1]+ty)) for l in fold_lines]
     return perimeter,fold_lines
@@ -139,8 +141,10 @@ def ellipses(ellipses, hoffset=0, numsteps = 100, flip=False):
         
         if ellipses[i]['skin_split'] and ellipses[i+1]['skin_split']:
             if a1[1] != a[0][1] and b1[1] != b[0][1]:
-                a = [a1] + a + [a2]
-                b = [b1] + b + [b2]
+                a.prepend(a1)
+                a.append(a2)
+                b.prepend(b1)
+                b.append(b2)
                 ellipses[i]['flat_ends'] = True
             else:
                 ellipses[i]['flat_ends'] = False
@@ -151,14 +155,16 @@ def ellipses(ellipses, hoffset=0, numsteps = 100, flip=False):
                                                  voffset, hoffset)
         # I only have triangles start with one point, going to two, ymmv for other designs --
         if ((not ellipses[i]['skin_split']) or (a1 == a[0])) and (ellipses[i+1]['skin_split']) and (b[0] != b1):
-            print(a[0])
-            print(b[0])
-            print(b1)
+            #print(a[0])
+            #print(b[0])
+            #print(b1)
             d1 = distance(a[0],b1)
             d2 = distance(b[0],b1)
             p1 = find_pointr(a_flat[0],b_flat[-1],d1,d2)
             p2 = find_pointl(a_flat[-1],b_flat[0],d1,d2)
-            b_flat = [p2] + b_flat + [p1]
+            b_flat.prepend(p2)
+            b_flat.append(p1)
+            #b_flat = [p2] + b_flat + [p1]
         print(points_to_poly(a_flat+b_flat))
         voffset-=2
         results.append((a_flat,
@@ -169,7 +175,7 @@ def ellipses(ellipses, hoffset=0, numsteps = 100, flip=False):
 
 def make_tab(a,b,width=.75,tilt=.2, flip=False):
     base_angle = math.atan2(a[0]-b[0],a[1]-b[1])
-    points = []
+    points = Polygon()
     angle = math.atan2(a[0]-b[0], a[1]-b[1])
     if flip:
         angle += 3.14159
@@ -191,7 +197,7 @@ def round_corners(points, *ops):
         #poly = poly.buffer(op,quad_segs=8)
         poly = poly.buffer(op,quad_segs=10)
     poly = shapely.get_parts(poly)[0]
-    return list(zip(*poly.exterior.coords.xy))
+    return Polygon(list(zip(*poly.exterior.coords.xy)))
 
 def fancy_notch(angle, center, length, spread):
     points = []
@@ -490,7 +496,7 @@ def wing_rib(airfoil, chord):
 # this keeps the first two points, and triangulates the third, returns
 # svg (I need to change this)
 def flat_triangle(pa,pb,d1,d2,side='left'):
-    poly = []
+    poly = Polygon()
     poly.append(pa)
     poly.append(pb)
     pc = find_pointl(pa,pb,d1,d2) if side == 'left' else find_pointr(pa,pb,d1,d2)
@@ -500,8 +506,8 @@ def flat_triangle(pa,pb,d1,d2,side='left'):
 def build_dashed_line(a,b):
     return f'<line stroke-width="0.1" stroke="blue" stroke-dasharray="0.5, 0.5" x1="{a[0]}" y1="{a[1]}" x2="{b[0]}" y2="{b[1]}"></line>'
 
-def build_flat_fan(pivot, fan, start_pivot=(0,0), start_point=None, reverse=False, tx=0,ty=0,direction='left'):
-    flattened = []
+def build_flat_fan(pivot, fan, start_pivot=(0,0), start_point=None, reverse=False, tx=0,ty=0,direction='left', color='black'):
+    flattened = Polygon(color=color)
     if reverse:
         fan.reverse()
     if not start_point:
@@ -523,8 +529,8 @@ def build_flat_fan(pivot, fan, start_pivot=(0,0), start_point=None, reverse=Fals
 
         flattened.append(newp)
     flattened.append(start_pivot)
-    flattened = [(i[0]+tx,i[1]+ty) for i in flattened]
-    print(points_to_poly(flattened))
+    flattened.translate(tx,ty)
+    print(flattened)
     return flattened
 
 #takes a triangle in any orientation in 3d, makes a 2d flattened equivalent.  I hope.
@@ -579,10 +585,17 @@ def build_flat_shape(a,b, voffset=0, hoffset=0, start=None, tx=0, ty=0):
     flattened_b.reverse()
     
     #print(points_to_poly(flattened_a+flattened_b, tx=tx, ty=ty))
-    
-    return ((height*-1.0)+voffset, 
-            [(i[0]+tx,i[1]+ty) for i in flattened_a], 
-            [(i[0]+tx,i[1]+ty) for i in flattened_b])
+   
+
+
+    #return ((height*-1.0)+voffset, 
+    #        [(i[0]+tx,i[1]+ty) for i in flattened_a], 
+    #        [(i[0]+tx,i[1]+ty) for i in flattened_b])
+    flattened_a = Polygon(flattened_a)
+    flattened_b = Polygon(flattened_b)
+    flattened_a.translate(tx,ty)
+    flattened_b.translate(tx,ty)
+    return  ((height*-1.0)+voffset, flattened_a, flattened_b)
     #return (height*-1.0)+voffset
 
 

@@ -295,7 +295,7 @@ floor_shapes = []
 for i in range(0,len(floor)-2,2):
     floor_shapes.append((i,i+1,i+3,i+2))
 perimeter,fold_lines = flat_box(floor, floor_shapes,[])
-print(points_to_poly(perimeter))
+print(perimeter)
 #print(floor)
 #print(floor_shapes)
 
@@ -313,7 +313,7 @@ sides_shapes.append((13,11,29,30))
 #print(sides)
 #5/0
 perimeter,fold_lines = flat_box(sides, sides_shapes,[])
-print(points_to_poly(perimeter))
+print(perimeter)
 for line in fold_lines:
     print(build_dashed_line(*line))
 
@@ -326,7 +326,7 @@ sides_shapes = [ (12,12+1,12+3),
                  (24,13, 30,31)
                  ]
 perimeter,fold_lines = flat_box(sides, sides_shapes,[],50,0)
-print(points_to_poly(perimeter))
+print(perimeter)
 for line in fold_lines:
     print(build_dashed_line(*line))
 
@@ -338,7 +338,7 @@ sides_shapes = [ (18,16,14,15,23,22,20),
                  (28,24,31,32,33)
                ]
 perimeter,fold_lines = flat_box(sides, sides_shapes,[],70,0)
-print(points_to_poly(perimeter))
+print(perimeter)
 for line in fold_lines:
     print(build_dashed_line(*line))
 
@@ -480,10 +480,10 @@ l = [(stations[-5],upper_bottom[-5],widths[-5]*-1),(stations[-5],upper_bottom[-5
 m = [(stations[-2],upper_bottom[-2],widths[-2]*-1),k]
 negative_vertical_side     = build_flat_shape(l, m, start=(tri_b[2],tri_b[0]))
 
-print(points_to_poly(tri_a))
-print(points_to_poly(tri_b))
-print(points_to_poly(positive_vertical_side[1]+positive_vertical_side[2]))
-print(points_to_poly(negative_vertical_side[1]+negative_vertical_side[2]))
+print(tri_a)
+print(tri_b)
+print(positive_vertical_side[1]+positive_vertical_side[2])
+print(negative_vertical_side[1]+negative_vertical_side[2])
 
 
 # --------------------------------------------------------------------------------------------------------
@@ -494,9 +494,9 @@ tail_ellipse_positive = tail_ellipse[:50]
 tail_ellipse_negative = tail_ellipse[49:]
 
 
-positive_side   = build_flat_fan(b,tail_ellipse_positive,tx=10,ty=-265)
+positive_side   = build_flat_fan(b,tail_ellipse_positive,tx=10,ty=-265,color='red')
 bottom_triangle = flat_triangle(positive_side[-2],positive_side[-1],distance(a,c),distance(b,c),side='right')
-negative_side   = build_flat_fan(c,tail_ellipse_negative,start_pivot=bottom_triangle[-1],start_point=bottom_triangle[0])
+negative_side   = build_flat_fan(c,tail_ellipse_negative,start_pivot=bottom_triangle[-1],start_point=bottom_triangle[0],color='green')
 
 # this is the little chunk at the verticle part of the tail  that overlaps the front of the rudder
 positive_vertical_triangle = flat_triangle(positive_side[0],positive_side[-1],distance(f,d),distance(b,d))
@@ -523,13 +523,13 @@ negative_vertical_end      = build_flat_shape(top, bottom,
                                                      negative_vertical_triangle[1]
                                               ))
 
-print(points_to_poly(positive_vertical_triangle))
-print(points_to_poly(bottom_triangle))
-print(points_to_poly(negative_vertical_triangle))
-print(points_to_poly(positive_vertical_side[1]+positive_vertical_side[2]))
-print(points_to_poly(negative_vertical_side[1]+negative_vertical_side[2]))
-print(points_to_poly(positive_vertical_end[1]+positive_vertical_end[2]))
-print(points_to_poly(negative_vertical_end[1]+negative_vertical_end[2]))
+print(positive_vertical_triangle)
+print(bottom_triangle)
+print(negative_vertical_triangle)
+print(positive_vertical_side[1]+positive_vertical_side[2])
+print(negative_vertical_side[1]+negative_vertical_side[2])
+print(positive_vertical_end[1]+positive_vertical_end[2])
+print(negative_vertical_end[1]+negative_vertical_end[2])
 
 
 
@@ -754,8 +754,8 @@ panel = build_flat_fan(vstab_front_bottom[0],
 # --------------------------------------------------------------------------------------------------------
 
 
-rudder_bottom_end = [(262.91,rudder_y_bottom,0)]
-rudder_lower_end = [(265.57,rudder_y_lower,0)]
+rudder_bottom_end = Polygon([(262.91,rudder_y_bottom,0)])
+rudder_lower_end = Polygon([(265.57,rudder_y_lower,0)])
 
 rudder_front_bottom = make_ellipse({'width':             2.251,
                                     'height':            2.251,
@@ -802,11 +802,11 @@ post_polys = [(0,1,3,2),
               (6,7,9,8)]
 
 perimeter,fold_lines = flat_box(post_points, post_polys,[])
-print(points_to_poly(perimeter))
+print(perimeter)
 
 
-rudder_middle_curve  = vtail_base[0:46]
-rudder_upper_curve   = vtail_top[0:46]
+rudder_middle_curve  = Polygon(vtail_base[0:46])
+rudder_upper_curve   = Polygon(vtail_top[0:46])
 transform_tail(rudder_middle_curve,228.5,rudder_y_middle)
 transform_tail(rudder_upper_curve,228.5,rudder_y_upper)
 
@@ -818,19 +818,19 @@ print(points_to_poly(rudder_upper,xindex=0,yindex=2,tx=-110,ty=-240))
 
 # rudder top
 hoff,a,b = build_flat_shape(rudder_middle,rudder_upper,tx=130,ty=-170)
-print(points_to_poly(a+b))
+print(a+b)
 
 # rudder middle
 a=build_flat_fan((250.26,rudder_y_lower,2.28),rudder_lower_end+rudder_middle_curve+[(252.8,rudder_y_middle,2.02)],tx=160,ty=-140)
 b = build_flat_shape(rudder_front_lower, rudder_front_middle, start=a)
-print(points_to_poly(b[1]+b[2]))
+print(b[1]+b[2])
 c=build_flat_fan((250.26,rudder_y_lower,2.28),rudder_lower_end+rudder_middle_curve+[(252.8,rudder_y_middle,2.02)],start_pivot=b[1][-1],start_point=b[2][0],reverse=True)
 
 # rudder lower
 hoff,a,b = build_flat_shape(rudder_lower_end+rudder_front_lower+rudder_lower_end,
                             rudder_bottom_end+rudder_front_bottom+rudder_bottom_end,
                             hoffset=140,voffset=-80)
-print(points_to_poly(a+b))
+print(a+b)
 
 
 # these are the ribs for the rudder lower/bottom
