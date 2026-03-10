@@ -108,7 +108,7 @@ def holes_on_a_line(line, end_margin, min_distance,tx,ty):
             print(hole)
             # TODO: find position on line
             circle = shapely.Point(hole).buffer(.125)
-            points = list(zip(*circle.exterior.coords.xy))
-            print(points_to_poly(points, tx=tx, ty=ty))
+            points = Polygon(list(zip(*circle.exterior.coords.xy)))
+            print(points.translate(tx,ty))
         print(f'distance = {arc_distance} available_arc = {available_arc} num_holes = {num_holes} holes = {holes}')
         

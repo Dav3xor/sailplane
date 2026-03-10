@@ -2,17 +2,15 @@ import math
 
 
 class Polygon:
-    def __init__(self, points=[],color='black',dash=None,xindex=0, yindex=1, tx=0,ty=0,closed=True):
+    def __init__(self, points=[],color='black',dash=None, tx=0,ty=0,closed=True):
         self.points = points.copy()
         self.closed = True
-        self.xindex = xindex
-        self.yindex = yindex
-        self.color  = color
+        self.colorx  = color
         self.dash   = dash
     def copy(self):
         return Polygon(self.points.copy())
     def translate(self,tx,ty):
-        self.points = [(i[0]+tx,i[1]+ty) for i in self.points]
+        self.points =  [tuple([point[0]+tx, point[1]+ty] + list(point[2:])) for point in self.points]
         return self
 
     def reverse(self):
@@ -39,7 +37,7 @@ class Polygon:
         poly = ''
         for point in self.points:
             try:
-                poly += f'{point[self.xindex]},{point[self.yindex]} \n'
+                poly += f'{point[0]},{point[1]} \n'
             except:
                 print(self.points)
                 5/0
@@ -49,9 +47,9 @@ class Polygon:
             dash = ''
 
         if self.closed:
-            return f'<polygon stroke-width="0.1" fill="none" stroke="{self.color}" points="{poly}" />'
+            return f'<polygon stroke-width="0.1" fill="none" stroke="{self.colorx}" points="{poly}" />'
         else:
-            return f'<polyline stroke-width="0.1" {dash} fill="none" stroke="{self.color}" points="{poly}" />'
+            return f'<polyline stroke-width="0.1" {dash} fill="none" stroke="{self.colorx}" points="{poly}" />'
 
     def mirrorz(self):
         points2 = []
@@ -62,9 +60,21 @@ class Polygon:
 
     def append(self,point):
         self.points.append(point)
+   
+   
+    def color(self, color):
+        self.colorx = color
+        return self
+
+    def reduce2d(self,xindex,yindex):
+        self.points = [(i[xindex],i[yindex]) for i in self.points]
+        return self
 
     def prepend(self,point):
         self.points = [point] + self.points
+
+    def insert(self,loc,data):
+        self.points.insert(loc,data)
 
 def parallel(a,b):
     p = Polygon()
@@ -191,28 +201,6 @@ def translate_poly(p, x, y, z):
     for i in range(len(p)):
         p[i] = translate_point(p[i],x,y,z)
 
-def adjust_ellipse(a,b_old,ea,eb, numsteps=100):
-    step_angle = (2*3.14159*ea['amount'])/(numsteps-1)
-    b = b_old.copy()
-    cur_angles = [i*step_angle for i in range(len(a))]
-    for j in range(20):
-        #print('---')
-        for i in range(len(a)):
-            aa = math.atan2(a[i][2], a[i][1])
-            ab = math.atan2(b[i][2],b[i][1])
-            
-            difference = (aa-ab)
-            if abs(difference) > .0001:
-                cur_angles[i] = cur_angles[i] - (difference / 1.2)
-                b[i] = ellipse_point(cur_angles[i],eb)
-            #print(f'aa={aa} ab={ab} aa-ab={aa-ab}')
-    
-    print(points_to_poly(b_old,xindex=1,yindex=2, color="blue"))
-    print(points_to_poly(a,xindex=1,yindex=2, color="red"))
-    print(points_to_poly(b,xindex=1,yindex=2, color="green"))
-    return b
-
-
 
 def points_to_circles(points, radius, width = '.1', units = ''):
     output = ''
@@ -220,23 +208,6 @@ def points_to_circles(points, radius, width = '.1', units = ''):
         output += f'<circle r="{radius}{units}" cx="{point[0]}{units}" cy="{point[1]}{units}"  stroke="black" stroke-width="{width}{units}" fill="none" />\n'
     return output
 
-def points_to_poly(points,xindex=0,yindex=1,tx=0.0,ty=0.0, color='black', dash=None,polyline=False):
-    poly = ''
-    for point in points:
-        try:
-            poly += f'{point[xindex]+tx},{point[yindex]+ty} \n'
-        except:
-            print(points)
-            5/0
-    if dash:
-        dash = f"stroke-dasharray='{dash}'" # svg format --> 0.5, 0.5
-    else:
-        dash = ''
-
-    if polyline:
-        return f'<polyline stroke-width="0.1" {dash} fill="none" stroke="{color}" points="{poly}" />'
-    else:
-        return f'<polygon stroke-width="0.1" fill="none" stroke="{color}" points="{poly}" />'
 
 def points_to_line(p1,p2):
     return f'<line x1="{p1[0]}" y1="{p1[1]}" x2="{p2[0]}" y2="{p2[1]}" style="stroke:black;stroke-width:0.1" />'

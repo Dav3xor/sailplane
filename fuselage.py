@@ -396,11 +396,11 @@ b = [(0,1,2,3), # top
 
 # this is a test for showing the side view (projection) of the fuselage.  just to make sure it's working
 #side_projection = [(stations[i],upper_top[i]) for i in range(len(stations)) if upper_top[i]] + [(stations[i],belly_bottom[i]) for i in reversed(range(len(stations))) if belly_bottom[i]]
-#print(points_to_poly(side_projection))
+#print(side_projection)
 
 # this is a test for the flat_box function
 #perimeter,fold_lines = flat_box(a,b,[])
-#print(points_to_poly(perimeter))
+#print(perimeter)
 #for line in fold_lines:
 #    print(build_dashed_line(*line))
 
@@ -408,19 +408,19 @@ b = [(0,1,2,3), # top
 
 # --------------------------------------------------------------------------------------------------------
 # spine
-spine  = [(widths[i],stations[i]) for i in range(10,len(widths)-3)] 
+spine  = Polygon([(widths[i],stations[i]) for i in range(10,len(widths)-3)] )
 spine += [(i[0]*-1,i[1]) for i in reversed(spine)]
 
 # outline
-print(points_to_poly(spine,tx=-16,ty=-280))
+print(spine.translate(-16,-280))
 
 # cutouts & tabs
 for i in range((len(spine)//2)-1):
     cutout = [spine[i],spine[i+1],spine[(-1 * i) - 2],spine[(-1 * i) -1]]
-    print(points_to_poly(round_corners(cutout, -4,7,-5), tx=-16,ty=-280))
+    print(round_corners(cutout, -4,7,-5))
 
-    print(points_to_poly(make_tab(spine[i],spine[i+1]), tx=-16,ty=-280))
-    print(points_to_poly(make_tab(spine[(-1*i)-2],spine[(-1*i)-1]), tx=-16,ty=-280))
+    print(make_tab(spine[i],spine[i+1]))
+    print(make_tab(spine[(-1*i)-2],spine[(-1*i)-1]))
 
 
 
@@ -577,7 +577,7 @@ print(side_points)
 print(side_faces)
 side_faces = side_faces[2:-4]
 perimeter,fold_lines = flat_box(side_points, side_faces,[])
-print(points_to_poly(perimeter))
+print(perimeter)
 
 
 
@@ -730,7 +730,7 @@ vstab_upper_curve.append(  vstab_upper_end_neg)
 hoff,a,b = build_flat_shape(vstab_middle_curve,
                             vstab_upper_curve,
                             tx=140,ty=-40)
-print(points_to_poly(a+b))
+print(a+b)
 
 # lower vertical stabilizer (2, one per side...  just making the positive one)
 # -------------------------------------------------------------------------------------------------------
@@ -813,9 +813,6 @@ transform_tail(rudder_upper_curve,228.5,rudder_y_upper)
 rudder_middle = rudder_middle_curve + rudder_front_middle + flip_z(rudder_middle_curve)
 rudder_upper = rudder_upper_curve + rudder_front_upper + flip_z(rudder_upper_curve)
 
-print(points_to_poly(rudder_middle,xindex=0,yindex=2,tx=-110,ty=-250))
-print(points_to_poly(rudder_upper,xindex=0,yindex=2,tx=-110,ty=-240))
-
 # rudder top
 hoff,a,b = build_flat_shape(rudder_middle,rudder_upper,tx=130,ty=-170)
 print(a+b)
@@ -832,12 +829,13 @@ hoff,a,b = build_flat_shape(rudder_lower_end+rudder_front_lower+rudder_lower_end
                             hoffset=140,voffset=-80)
 print(a+b)
 
+print(rudder_middle.reduce2d(0,2).translate(-110,-250))
+print(rudder_upper.reduce2d(0,2).translate(-110,-240))
+
 
 # these are the ribs for the rudder lower/bottom
-print(points_to_poly(rudder_lower_end+rudder_front_lower+rudder_lower_end,
-                     xindex=0,yindex=2,tx=-110,ty=-230))
-print(points_to_poly(rudder_bottom_end+rudder_front_bottom+rudder_bottom_end,
-                     xindex=0,yindex=2,tx=-110,ty=-220))
+print((rudder_lower_end+rudder_front_lower+rudder_lower_end).reduce2d(0,2).translate(-110,-230))
+print((rudder_bottom_end+rudder_front_bottom+rudder_bottom_end).reduce2d(0,2).translate(-110,-220))
 
 
 
@@ -847,7 +845,7 @@ for i in range(len(s.get_bulkheads())):
     bulkhead = s[i]
     tx = 110
     ty = -350+i*30
-    points = [] 
+    points = Polygon()
   
     uppers = s.get_upper_ellipse(i)
     if uppers['height']:
@@ -859,7 +857,6 @@ for i in range(len(s.get_bulkheads())):
                           bulkhead['bulkhead_split']))
             points.insert(0,(uppers['width'],
                           bulkhead['bulkhead_split']))
-            print(points_to_poly(points, tx=tx,ty=ty, color="green"))
             make_notched_bulkhead(points, bulkhead['bulkhead_split'], bulkhead['top_notches'],tx,ty, side='top')
 
             a = uppers['width']*1.05
@@ -867,7 +864,8 @@ for i in range(len(s.get_bulkheads())):
             c = b-.5
 
 
-            print(points_to_poly(round_corners(points, b,a,c), tx=tx,ty=ty))
+            print(points.translate(tx,ty).color('green'))
+            print(round_corners(points, b,a,c))
     else:
         if uppers['width'] and uppers['vertical_center']:
             points.append((uppers['width'],
@@ -878,7 +876,7 @@ for i in range(len(s.get_bulkheads())):
     lowers = s.get_lower_ellipse(i)
     if lowers['height']:
         lower = make_ellipse(lowers,numsteps=401)
-        lower = [(j[2],j[1]) for j in lower]
+        lower = Polygon([(j[2],j[1]) for j in lower])
         if bulkhead['bulkhead_split']:
             points = lower 
             if 'floor' in bulkhead:
@@ -899,16 +897,17 @@ for i in range(len(s.get_bulkheads())):
                 a = lowers['height']*1.2
                 b = a*-.55
                 c = b-2.2
-                print(points_to_poly(round_corners(points, b,a,c), tx=tx,ty=ty))
+                print(round_corners(points, b,a,c).translate(tx,ty))
 
             make_notched_bulkhead(points, bulkhead['bulkhead_split'], bulkhead['bottom_notches'],tx,ty)
-            print(points_to_poly(points, tx=tx,ty=ty))
+            print(points.translate(tx,ty))
         
 
     if not bulkhead['bulkhead_split'] and points: 
         lower.reverse()
+        print(type(points))
         points += lower
-        print(points_to_poly(points, tx=tx,ty=ty))
+        print(points.translate(tx,ty))
 
 print('</svg>')    
 

@@ -76,7 +76,7 @@ def points_on_a_line(a,b,num_divisions):
     vector = (b[0]-a[0],
               b[1]-a[1],
               b[2]-a[2])
-    points = []
+    points = Polygon(closed=False)
     for i in range(1,num_divisions):
         d = (1/(num_divisions))*i
         #print(f'distance a->b {distance(a,b)}')
@@ -165,7 +165,7 @@ def ellipses(ellipses, hoffset=0, numsteps = 100, flip=False):
             b_flat.prepend(p2)
             b_flat.append(p1)
             #b_flat = [p2] + b_flat + [p1]
-        print(points_to_poly(a_flat+b_flat))
+        print(a_flat+b_flat)
         voffset-=2
         results.append((a_flat,
                         b_flat, 
@@ -215,14 +215,14 @@ def difference(a,b):
     pb = shapely.Polygon(b)
     pc = shapely.difference(pa,pb,grid_size=.01)
     pc = shapely.get_parts(pc)[0]
-    return list(zip(*pc.exterior.coords.xy))
+    return Polygon(list(zip(*pc.exterior.coords.xy)))
 
 def simplify(a):
     pa = shapely.Polygon(a)
     #pa = shapely.simplify(pa,.002)
     pa = shapely.simplify(pa,.005)
     pa = shapely.get_parts(pa)[0]
-    return list(zip(*pa.exterior.coords.xy))
+    return Polygon(list(zip(*pa.exterior.coords.xy)))
 
 
 
@@ -248,7 +248,7 @@ def make_notched_bulkhead(points, split, notches,tx,ty, side='bottom'):
     # (outside) sheet metal cutout, including flanges/notches
     bulkhead_shape = simplify(round_corners(points, .75))
 
-    #print(points_to_poly(round_corners(points, .75), tx=tx,ty=ty))
+    #print(round_corners(points, .75).translate(tx,ty))
    
     
     skip = notches[0] if len(notches) > 0 else 0
@@ -267,18 +267,18 @@ def make_notched_bulkhead(points, split, notches,tx,ty, side='bottom'):
     # copy/mirror the left bottom corner 
     right_corner = [(i[0]*-1,i[1]) for i in left_corner]
 
-    #print(points_to_poly(round_corners(left_corner,.25), tx=tx, ty=ty))
-    #print(points_to_poly(round_corners(right_corner,.25), tx=tx, ty=ty))
+    #print(round_corners(left_corner,.25).translate(tx,ty))
+    #print(round_corners(right_corner,.25).translate(tx,ty))
     left_corner  = round_corners(left_corner,.25)
     right_corner = round_corners(right_corner,.25)
   
     top_notch = fancy_notch(math.pi*-1,(points[200][0],points[200][1]+.25),2,.25)
-    #print(points_to_poly(top_notch,tx=tx,ty=ty))
+    #print(top_notch.translate(tx,ty))
     bulkhead_shape = difference(bulkhead_shape,top_notch)
     bulkhead_shape = difference(bulkhead_shape,left_corner)
     bulkhead_shape = difference(bulkhead_shape,right_corner)
 
-    #print(points_to_poly(top_notch,tx=tx,ty=ty))
+    #print(top_notch.translate(tx,ty))
 
     prev_p   = skip
     cur_p    = 0
@@ -308,8 +308,8 @@ def make_notched_bulkhead(points, split, notches,tx,ty, side='bottom'):
 
 
 
-    print(points_to_poly(simplify(round_corners(bulkhead_shape,-.05,.1,-.05)),tx=tx,ty=ty)) 
-    print(points_to_poly(bulkhead_shape,color="red",tx=tx,ty=ty)) 
+    print(simplify(round_corners(bulkhead_shape,-.05,.1,-.05)).translate(tx,ty))
+    print(bulkhead_shape.color('red').translate(tx,ty))
 
 
 def connecting_strip(centerline, edges, width, skip, tx=0,ty=0, flat_ends=False):
@@ -363,13 +363,13 @@ def connecting_strip(centerline, edges, width, skip, tx=0,ty=0, flat_ends=False)
     
     b.reverse()
 
-    print(points_to_poly(a+b, tx=tx,ty=ty))
+    print(Polygon(a+b).translate(tx,ty))
 
 
 
 
 def expand_airfoil(airfoil,chord,datum, sweep):
-    points = []
+    points = Polygon(closed=False)
     for i in range(len(airfoil)):
         points.append(((airfoil[i][0]*chord)+sweep,
                        airfoil[i][1]*chord,
@@ -446,21 +446,24 @@ def wing_skin(shapes1, chord1, shapes2, chord2, span, sweep, num_ribs=None, tx=0
         af2_shape = expand_airfoil(airfoil2, chord2, span, sweep)
       
         
-        print(points_to_poly(af1_shape,tx=tx,ty=ty-20, polyline=True))
-        print(points_to_poly(af2_shape,tx=tx,ty=ty-20, polyline=True))
+        print(af1_shape.translate(tx,ty-20))
+        print(af2_shape.translate(tx,ty-20))
+
+        af1_shape.translate(tx*-1,(ty-20)*-1)
+        af2_shape.translate(tx*-1,(ty-20)*-1)
 
         if num_ribs != None: 
-            ribs = [[] for j in range(num_ribs)]
+            ribs = [Polygon() for j in range(num_ribs)]
             for j in range(len(af1_shape)):
                 points = points_on_a_line(af1_shape[j],af2_shape[j],num_ribs)
                 for k in range(len(points)):
                     ribs[k].append(points[k])
             for rib in ribs:
-                print(points_to_poly(rib,tx=tx,ty=ty-20,polyline=True))
+                print(rib.translate(tx,ty-20))
 
 
         a,b,c = build_flat_shape(af1_shape, af2_shape, voffset=ty, hoffset=tx-(i*30))
-        print(points_to_poly(b+c))
+        print(b+c)
         for line in spanlines[i]:
             for i in range(len(airfoil1)):
                 if line == airfoil1[i][0]:
@@ -474,24 +477,12 @@ def wing_skin(shapes1, chord1, shapes2, chord2, span, sweep, num_ribs=None, tx=0
     return (af1_shape, af2_shape,a)
 
 def wing_spar(chord_a,chord_b,span,extents_a, extents_b,tx=0,ty=0):
-    spar = [(chord_a*extents_a[1][1], 0),
+    spar = Polygon([(chord_a*extents_a[1][1], 0),
             (chord_a*extents_a[0][1], 0),
             (chord_b*extents_b[0][1], span),
-            (chord_b*extents_b[1][1], span)]
-    print(points_to_poly(spar, tx=tx, ty=ty))
+            (chord_b*extents_b[1][1], span)])
+    print(spar.translate(tx,ty))
    
-    # I was making another slightly thinner spar for a while, will probably rework this later to make
-    # the spars slightly thinner than the wing at that point...
-    #spar = [(chord_a*extents_a[1]-.125, 0),
-    #        (chord_a*extents_a[0]+.125, 0),
-    #        (chord_b*extents_b[0]+.125, span),
-    #        (chord_b*extents_b[1]-.125, span)]
-    #print(points_to_poly(spar, tx=tx+10, ty=ty))
-            
-
-
-def wing_rib(airfoil, chord):
-    print(points_to_poly(expand_airfoil(airfoil,chord,0,0)))
 
 # this keeps the first two points, and triangulates the third, returns
 # svg (I need to change this)
@@ -584,7 +575,7 @@ def build_flat_shape(a,b, voffset=0, hoffset=0, start=None, tx=0, ty=0):
     # beginning.
     flattened_b.reverse()
     
-    #print(points_to_poly(flattened_a+flattened_b, tx=tx, ty=ty))
+    #print((flattened_a+flattened_b).translate(tx,ty))
    
 
 
