@@ -27,24 +27,38 @@ def point_along_polyline(line,distance):
         #print("-")
         return None
 
-def points_along_polyline(line,margin,num_points, offset=.75):
-    total_length     = polyline_distance(line)
-    cur_pos          = margin
-    available_length = total_length-(margin*2)
-    segment_length   = available_length/(num_points-1)
+def points_along_polyline(line,margin,num_points, offset=.75, side='bottom'):
     points = []
-    for point in range(num_points):
-        p = point_along_polyline(line,cur_pos)
+    def position_point(p):
+        p1,p2,p = p
+        if side=='bottom':
+            angle = math.atan2(line[p1][0]-line[p2][0], 
+                               line[p1][1]-line[p2][1])+(math.tau/4)
+        else:
+            angle = math.atan2(line[p1][0]-line[p2][0], 
+                               line[p1][1]-line[p2][1])-(math.tau/4)
+        op = (p[0]+math.sin(angle)*offset, 
+              p[1]+math.cos(angle)*offset)
+        points.append(op)
+
+    total_length     = polyline_distance(line)
+    available_length = total_length-(margin*2)
+    
+    if num_points == 1:
+        segment_length = available_length/2
+        p = point_along_polyline(line,margin+segment_length)
         if p:
-            p1,p2,p = p
-            cur_pos    += segment_length
-            angle = math.atan2(line[p1][0]-line[p2][0], line[p1][1]-line[p2][1])+(math.tau/4)
-            op = (p[0]+math.sin(angle)*offset, 
-                  p[1]+math.cos(angle)*offset)
-            points.append(op)
+            position_point(p)
+    else:
+        cur_pos          = margin
+        segment_length   = available_length/(num_points-1)
+        for point in range(num_points):
+            p = point_along_polyline(line,cur_pos)
+            if p:
+                position_point(p)
+                cur_pos    += segment_length
     return points
 
-# this is the old function, TODO: remove
 def polyline_point_after_distance(line,total_length):
     #print(line)
     if len(line) < 2:
@@ -63,12 +77,14 @@ def polyline_point_after_distance(line,total_length):
         return None
 
 def polyline_distance(line):
+    print(line)
     if len(line) < 2:
         return 0
     else:
         length = 0
         for i in range(len(line)-1):
             length += distance(line[i],line[i+1])
+        print(length)
         return length
 
 
@@ -76,39 +92,20 @@ def polyline_distance(line):
 
 # TODO: deprecated, remove...
 # well, not really a line, more like holes on a polyline (typically an arc)
-def holes_on_a_line(line, end_margin, min_distance,tx,ty):
+def holes_on_a_line(line, end_margin, min_distance,tx,ty,side='bottom'):
     # rivet hole spacing
     rline = line.copy()
     rline.reverse()
+    #print("x")
     arc_distance = polyline_distance(line)
     if arc_distance:
         available_arc = arc_distance-(end_margin*2)
-        num_holes = math.floor(available_arc/min_distance)
-        if num_holes < 1:
-            num_holes = 1
-        distance_between_holes = available_arc/(num_holes+1)
-        holes = []
-        if num_holes == 1:
-            holes.append(line[polyline_point_after_distance(line, arc_distance/2)[0]])
-        if num_holes == 2:
-            holes.append(line[polyline_point_after_distance(line, end_margin)[0]])
-            holes.append(rline[polyline_point_after_distance(rline, end_margin)[0]])
-            #holes.append(end_margin)
-            #holes.append(arc_distance-end_margin)
-        if num_holes == 3:
-            holes.append(line[polyline_point_after_distance(line, end_margin)[0]])
-            holes.append(rline[polyline_point_after_distance(rline, end_margin)[0]])
-            holes.append(line[polyline_point_after_distance(line, arc_distance/2)[0]])
-
-            #holes.append(end_margin)
-            #holes.append(end_margin+(available_arc/2))
-            #holes.append(arc_distance-end_margin)
-
-        for hole in holes:
-            print(hole)
-            # TODO: find position on line
-            circle = shapely.Point(hole).buffer(.125)
-            points = Polygon(list(zip(*circle.exterior.coords.xy)))
-            print(points.translate(tx,ty))
-        print(f'distance = {arc_distance} available_arc = {available_arc} num_holes = {num_holes} holes = {holes}')
+        num_holes = math.ceil(available_arc/min_distance)
+        points = points_along_polyline(line,end_margin,num_holes,offset=.375,side=side)
+        
+        for point in points:
+            circle = shapely.Point(point).buffer(.125)
+            circle = Polygon(list(zip(*circle.exterior.coords.xy)))
+            print(circle.translate(tx,ty))
+    #print(f'distance = {arc_distance} available_arc = {available_arc} num_holes = {num_holes}')
         

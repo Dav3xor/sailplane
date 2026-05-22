@@ -6,6 +6,12 @@ def split(a,b):
     return a + ((b-a)/2)
 
 
+tab_side_margin     = .7
+tab_rivet_margin    = .7 
+tab_widths      = { 1:{'width': (tab_side_margin*2)},
+                    2:{'width': (tab_side_margin*2) + tab_rivet_margin},
+                    3:{'width': (tab_side_margin*2) + (tab_rivet_margin*2)} }
+
 
 
 
@@ -272,16 +278,19 @@ def make_notched_bulkhead(points, split, notches,tx,ty, side='bottom'):
     left_corner  = round_corners(left_corner,.25)
     right_corner = round_corners(right_corner,.25)
   
-    top_notch = fancy_notch(math.pi*-1,(points[200][0],points[200][1]+.25),2,.25)
+    if side=='bottom':
+        top_notch = fancy_notch(math.pi*-1,(points[200][0],points[200][1]+.25),2,.15)
+    else:
+        top_notch = fancy_notch(math.pi*2,(points[200][0],points[200][1]-.25),2,.15)
+
     #print(top_notch.translate(tx,ty))
     bulkhead_shape = difference(bulkhead_shape,top_notch)
     bulkhead_shape = difference(bulkhead_shape,left_corner)
     bulkhead_shape = difference(bulkhead_shape,right_corner)
 
-    #print(top_notch.translate(tx,ty))
 
-    prev_p   = skip
-    cur_p    = 0
+    #prev_p   = skip
+    cur_p    = skip
     next_end = 0
 
 
@@ -292,19 +301,29 @@ def make_notched_bulkhead(points, split, notches,tx,ty, side='bottom'):
     bulkhead_shape = difference(bulkhead_shape,notch2)
 
     #while next_end != None and cur_p+next_end < len(points)//2-10:
-    for notch_distance in notches[1:]:
-        next_end = polyline_point_after_distance(points[cur_p:len(points)//2],notch_distance)[0]
-        cur_p = prev_p + next_end 
+    notch_index = [cur_p]
+    for num_holes in notches[1:]:
+        width = tab_widths[num_holes]['width']
+        next_end = polyline_point_after_distance(points[cur_p:len(points)//2],width)[0]
+        cur_p += next_end 
+        notch_index.append(cur_p)
 
-        notch1,notch2 = place_notch(cur_p-1,cur_p)
-
-        holes_on_a_line(points[prev_p:cur_p], .6, .3,tx,ty)
-
+    for notch in notch_index:
+        notch1,notch2 = place_notch(notch,notch+1)
         bulkhead_shape = difference(bulkhead_shape,notch1)
         bulkhead_shape = difference(bulkhead_shape,notch2)
+    
+    notch_index.append(len(points)//2)
+
+    # holes for the flat side tab(s)
+    if skip:
+        holes_on_a_line(points[:skip+1], tab_side_margin*.9, tab_rivet_margin,tx,ty, side=side)
+        print(points[:skip])
+    #holes for the rest of the tabs
+    for i in range(len(notch_index[:-1])):
+        holes_on_a_line(points[notch_index[i]:notch_index[i+1]], tab_side_margin*.9, tab_rivet_margin,tx,ty, side=side)
         
         
-        prev_p = cur_p
 
 
 
@@ -312,13 +331,73 @@ def make_notched_bulkhead(points, split, notches,tx,ty, side='bottom'):
     print(bulkhead_shape.color('red').translate(tx,ty))
 
 
+
+
+
 def connecting_strip(centerline, edges, width, skip, tx=0,ty=0, flat_ends=False):
+    a     = []
+    b     = []
+    start = 1
+    end   = len(centerline)-1
+
+    # first, make the strip without notches
+
+    # make an angle from the first two points
+    angle = math.atan2(centerline[0][0]-centerline[1][0], centerline[0][1]-centerline[1][1])
+    # start with the b side angle in
+    a.append((centerline[0][0]+width*math.sin(angle-(math.pi/2)-.3),
+              centerline[0][1]+width*math.cos(angle-(math.pi/2)-.3)))
+    # the very end
+    a.append(centerline[0])
+    # angle in slightly
+    a.append((centerline[0][0]+width*math.sin(angle+(math.pi/2)+.3),
+              centerline[0][1]+width*math.cos(angle+(math.pi/2)+.3)))
+
+    # trace a line along the centerline a width away
+    for i in range(start,end):
+        p1 = centerline[i]
+        p2 = centerline[i+1]
+        angle = math.atan2(p1[0]-p2[0], p1[1]-p2[1])
+        a.append((p1[0]+width*math.sin(angle+(math.pi/2)),
+                  p1[1]+width*math.cos(angle+(math.pi/2))))
+    
+    # make an angle from the last two points
+    angle = math.atan2(centerline[-1][0]-centerline[-2][0], centerline[-1][1]-centerline[-2][1])
+    # the a side angle in
+    a.append((centerline[-1][0]+width*math.sin(angle-(math.pi/2)-.3),
+              centerline[-1][1]+width*math.cos(angle-(math.pi/2)-.3)))
+    # the very end
+    a.append(centerline[-1])
+    # angle in slightly
+    a.append((centerline[-1][0]+width*math.sin(angle+(math.pi/2)+.3),
+              centerline[-1][1]+width*math.cos(angle+(math.pi/2)+.3)))
+
+    for i in range(start,end):
+        p1 = centerline[i]
+        p2 = centerline[i+1]
+        angle = math.atan2(p1[0]-p2[0], p1[1]-p2[1])
+        b.append((p1[0]+width*math.sin(angle-(math.pi/2)),
+                  p1[1]+width*math.cos(angle-(math.pi/2))))
+    b.reverse()
+    
+    strip = Polygon(a+b)
+    #for i in notches:
+    #    strip = difference(strip,fancy_notch(i[1],i[0],2,.15))
+    print(strip.translate(tx,ty))
+    
+def connecting_strip_old(centerline, edges, width, skip, tx=0,ty=0, flat_ends=False):
     a = []
     b = []
+    notches = []
+    start=1 
     if flat_ends:
         start = 2
         end = len(centerline)-2
-        a+=(make_tab(centerline[0],centerline[1], tilt=.4, flip=True))
+        angle = math.atan2(centerline[0][0]-centerline[1][0], centerline[0][1]-centerline[1][1])
+        a.append(centerline[0])
+        a.append((centerline[0][0]+width*math.sin(angle+(math.pi/2)+.3),
+                  centerline[0][1]+width*math.cos(angle+(math.pi/2)+.3)))
+        notches.append( (centerline[1], angle+(math.pi/2)) )
     else:
         start = 1
         end = len(centerline)-1
@@ -329,22 +408,24 @@ def connecting_strip(centerline, edges, width, skip, tx=0,ty=0, flat_ends=False)
         p1 = centerline[i]
         p2 = centerline[i+1]
         angle = math.atan2(p1[0]-p2[0], p1[1]-p2[1])
-        if i % skip:
-            a.append((p1[0]+width*math.sin(angle+(math.pi/2)),
-                      p1[1]+width*math.cos(angle+(math.pi/2))))
-        else:
-            a.append((p1[0]+(width/10)*math.sin(angle-(math.pi/2)),
-                      p1[1]+(width/10)*math.cos(angle-(math.pi/2))))
+        if not i % skip:
+            notches.append((p1,angle+(math.pi/2)))
+            #print(fancy_notch(angle+(math.pi/2), p1, 2, .15).translate(tx,ty))
+        a.append((p1[0]+width*math.sin(angle+(math.pi/2)),
+                  p1[1]+width*math.cos(angle+(math.pi/2))))
     if flat_ends:
         a+=(make_tab(centerline[-2],centerline[-1], tilt=.4, flip=True))
+        notches.append((centerline[-2],
+                        math.atan2(centerline[-2][0]-centerline[-1][0],
+                                   centerline[-2][1]-centerline[-1][1])+(math.pi/2)))
     else:
         a.append(centerline[-1])
 
     p1 = centerline[0]
     p2 = centerline[1]
     angle = math.atan2(p1[0]-p2[0], p1[1]-p2[1])
-    b.append((p1[0]+width*math.sin(angle-(math.pi/2)-.2),
-              p1[1]+width*math.cos(angle-(math.pi/2)-.2)))
+    b.append((p1[0]+width*math.sin(angle-(math.pi/2)-.3),
+              p1[1]+width*math.cos(angle-(math.pi/2)-.3)))
           
     for i in range(1,len(centerline)-2):
         p1 = centerline[i]
@@ -356,14 +437,16 @@ def connecting_strip(centerline, edges, width, skip, tx=0,ty=0, flat_ends=False)
     p1 = centerline[-1]
     p2 = centerline[-2]
     angle = math.atan2(p1[0]-p2[0], p1[1]-p2[1])
-    b.append((p1[0]+width*math.sin(angle+(math.pi/2)+.2),
-              p1[1]+width*math.cos(angle+(math.pi/2)+.2)))
+    b.append((p1[0]+width*math.sin(angle+(math.pi/2)+.3),
+              p1[1]+width*math.cos(angle+(math.pi/2)+.3)))
 
 
     
     b.reverse()
-
-    print(Polygon(a+b).translate(tx,ty))
+    strip = a+b
+    for i in notches:
+        strip = difference(strip,fancy_notch(i[1],i[0],2,.15))
+    print(strip.translate(tx,ty))
 
 
 
