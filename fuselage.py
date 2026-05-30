@@ -429,12 +429,12 @@ for i in range((len(spine)//2)-1):
 # fuselage skin
 
 
-# fuselage top & bottom
+# fuselage top & bottom (skins only)
 
 lowers = [s.get_lower_ellipse(i) for i in s.get_bulkheads()]
 uppers = [s.get_upper_ellipse(i) for i in s.get_bulkheads()]
-lowers = ellipses([i for i in lowers if i['height']],     flip=False)
-uppers = ellipses([i for i in uppers if i['height']], 50, flip=True)
+lowers = flattened_ellipses([i for i in lowers if i['height']],     flip=False)
+uppers = flattened_ellipses([i for i in uppers if i['height']], 50, flip=True)
 
 # this is a series of points defining where the skin splits at the last section of the tail
 tail_split_pos  = translate_point(vstab_lower_end_pos, (vstab_lower_end_pos[0]-vstab_bottom_end_pos[0])/-2.0, -1, 0)

@@ -129,7 +129,7 @@ print('<svg width="200in" height="200in" viewBox="0 0 200 200" viewboxxmlns="htt
 
 
         
-def ellipses(ellipses, hoffset=0, numsteps = 100, flip=False):
+def flattened_ellipses(ellipses, hoffset=0, numsteps = 100, flip=False):
     for e in ellipses:
         e['points'] = make_unit_ellipse(e, flip=flip, numsteps=numsteps)
     voffset = 0
