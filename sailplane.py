@@ -1,5 +1,5 @@
 from statistics import mean
-from math import sqrt, pi
+from math import sqrt, pi, tau
 
 
 # airfoils to try:  NACA 633-618
@@ -25,7 +25,6 @@ def prt(name, value):
     print(f"{name.ljust(40)} = {value}")
 
 
-tau            = 2*pi
 
 class Airfoil:
     def load_data(self,filename):
@@ -97,6 +96,7 @@ class Fin:
         self.root_chord     = root_chord
         self.tip_chord      = tip_chord
         self.single_span    = single_span
+
 class Wing(Fin):
     def __init__(self, wingspan, root_chord, tip_chord, single_span):
         Fin.__init__(self, root_chord, tip_chord, single_span)
@@ -122,7 +122,6 @@ class Wing(Fin):
         self.ar             = (self.wingspan**2) / self.sref
         self.wing_loading   = airplane.tow / self.sref
 
-airfoil20 = Airfoil('GA-40A620.txt')
 
 class Fuselage:
     def __init__(self, width, drag_coefficient):
@@ -374,7 +373,7 @@ Lht                  = itom(142.0) # length between wing and horizontal tail MAC
 Lvt                  = itom(161.0) #    "      "     "    "  vertical   tail MAC
 HTail_Sizing         = Cht * ((wing.mac*(wing.sref))/Lht)
 VTail_Sizing         = Cvt * ((15.0*(wing.wingspan/2.0))/Lvt)
-prt("HTail_Sizing calc-actual",f"{HTail_Sizing}-{HTail_Area}")
+prt("HTail_Sizing calc-actual",f"{HTail_Sizing}-{htail.area}")
 prt("VTail_Sizing calc-actual",f"{VTail_Sizing}-{VTail_Area}")
 
 

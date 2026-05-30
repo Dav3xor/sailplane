@@ -233,6 +233,8 @@ def simplify(a):
 
 
 def make_notched_bulkhead(points, split, notches,tx,ty, side='bottom'):
+    # TODO: start separating out constants putting them in a separate file -- 
+    # also make a constant for number of slices in each conic section
     def place_notch(p1,p2):
         angle = math.atan2(points[p1][0]-points[p2][0], 
                            points[p1][1]-points[p2][1])+(math.pi/2)
@@ -313,7 +315,7 @@ def make_notched_bulkhead(points, split, notches,tx,ty, side='bottom'):
         bulkhead_shape = difference(bulkhead_shape,notch1)
         bulkhead_shape = difference(bulkhead_shape,notch2)
     
-    notch_index.append(len(points)//2)
+    notch_index.append(len(points)//2-1)
 
     # holes for the flat side tab(s)
     if skip:
@@ -321,7 +323,7 @@ def make_notched_bulkhead(points, split, notches,tx,ty, side='bottom'):
         print(points[:skip])
     #holes for the rest of the tabs
     for i in range(len(notch_index[:-1])):
-        holes_on_a_line(points[notch_index[i]:notch_index[i+1]], tab_side_margin*.9, tab_rivet_margin,tx,ty, side=side)
+        holes_on_a_line(points[notch_index[i]:notch_index[i+1]+1], tab_side_margin*.9, tab_rivet_margin,tx,ty, side=side)
         
         
 
