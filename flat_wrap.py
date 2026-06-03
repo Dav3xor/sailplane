@@ -1,5 +1,7 @@
 import math
 import shapely
+import constants
+
 from geometry import *
 from rivets import *
 def split(a,b):
@@ -281,9 +283,9 @@ def make_notched_bulkhead(points, split, notches,tx,ty, side='bottom'):
     right_corner = round_corners(right_corner,.25)
   
     if side=='bottom':
-        top_notch = fancy_notch(math.pi*-1,(points[200][0],points[200][1]+.25),2,.15)
+        top_notch = fancy_notch(math.pi*-1,(points[constants.ellipse_steps//2+1][0],points[constants.ellipse_steps//2][1]+.25),2,.15)
     else:
-        top_notch = fancy_notch(math.pi*2,(points[200][0],points[200][1]-.25),2,.15)
+        top_notch = fancy_notch(math.pi*2,(points[constants.ellipse_steps//2+1][0],points[constants.ellipse_steps//2][1]-.25),2,.15)
 
     #print(top_notch.translate(tx,ty))
     bulkhead_shape = difference(bulkhead_shape,top_notch)
@@ -315,11 +317,11 @@ def make_notched_bulkhead(points, split, notches,tx,ty, side='bottom'):
         bulkhead_shape = difference(bulkhead_shape,notch1)
         bulkhead_shape = difference(bulkhead_shape,notch2)
     
-    notch_index.append(len(points)//2-1)
+    notch_index.append(constants.ellipse_steps//2+1)
 
     # holes for the flat side tab(s)
     if skip:
-        holes_on_a_line(points[:skip+1], tab_side_margin*.9, tab_rivet_margin,tx,ty, side=side)
+        holes_on_a_line(points[:skip+1], tab_side_margin*.9+.35, tab_rivet_margin,tx,ty, side=side, end_margin=tab_side_margin*.9)
         print(points[:skip])
     #holes for the rest of the tabs
     for i in range(len(notch_index[:-1])):

@@ -379,34 +379,44 @@ tail_ellipse_positive = tail_ellipse[:50]
 tail_ellipse_negative = tail_ellipse[49:]
 
 
-positive_side   = build_flat_fan(b,tail_ellipse_positive,tx=10,ty=-265,color='red')
-bottom_triangle = flat_triangle(positive_side[-2],positive_side[-1],distance(a,c),distance(b,c),side='right')
-negative_side   = build_flat_fan(c,tail_ellipse_negative,start_pivot=bottom_triangle[-1],start_point=bottom_triangle[0],color='green')
+positive_side   = build_flat_fan(b,tail_ellipse_positive,
+                                 tx=10,ty=-265,color='red')
+
+bottom_triangle = flat_triangle(positive_side[-2],positive_side[-1],
+                                distance(a,c),distance(b,c),
+                                side='right')
+
+negative_side   = build_flat_fan(c,tail_ellipse_negative,
+                                 start_pivot=bottom_triangle[-1],
+                                 start_point=bottom_triangle[0],
+                                 color='green')
 
 # this is the little chunk at the verticle part of the tail  that overlaps the front of the rudder
-positive_vertical_triangle = flat_triangle(positive_side[0],positive_side[-1],distance(f,d),distance(b,d))
-negative_vertical_triangle = flat_triangle(negative_side[-2],negative_side[-1],distance(g,e),distance(c,e),side='right')
+positive_vertical_triangle = flat_triangle(positive_side[0], positive_side[-1],
+                                           distance(f, d), distance(b,d))
+
+negative_vertical_triangle = flat_triangle(negative_side[-2],negative_side[-1],
+                                           distance(g,e),distance(c,e),
+                                           side='right')
                                         
 positive_vertical_side     = build_flat_shape((f,h), (d,j), 
-                                              start=(positive_vertical_triangle[2],positive_vertical_triangle[0]))
+                                              start = (positive_vertical_triangle[2],
+                                                       positive_vertical_triangle[0]))
 negative_vertical_side     = build_flat_shape((e,k), (g,i), 
-                                              start=(negative_vertical_triangle[0],negative_vertical_triangle[2]))
+                                              start = (negative_vertical_triangle[0],
+                                                       negative_vertical_triangle[2]) )
 
 top                        = [j, tail_split_pos]
 bottom                     = [b,constants.vstab_lowest_end_pos]
 positive_vertical_end      = build_flat_shape(top, bottom,
-                                              start=(
-                                                     positive_vertical_triangle[1],
-                                                     positive_vertical_side[2][0]
-                                              ))
+                                              start = (positive_vertical_triangle[1],
+                                                       positive_vertical_side[2][0] ))
 
 top                        = [c,constants.vstab_lowest_end_neg]
 bottom                     = [k, tail_split_neg]
 negative_vertical_end      = build_flat_shape(top, bottom,
-                                              start=(
-                                                     negative_vertical_side[1][1],
-                                                     negative_vertical_triangle[1]
-                                              ))
+                                              start = (negative_vertical_side[1][1],
+                                                       negative_vertical_triangle[1]) )
 
 print(positive_vertical_triangle)
 print(bottom_triangle)
@@ -503,23 +513,40 @@ for i in range(len(airfoils)):
                                                      'vertical_center':   0,
                                                      'amount':            0.5},
                                                      numsteps=20, mode=2, flip=2)][1:-1]
+
     flap_shapes.append(flap_root_top+flap_root_front+flap_root_bottom)
 
 for i in range(len(airfoils)-1):
 
-    wing_skin([trim_airfoil(airfoils[i],constants.wing_percent_chord_trim),flap_shapes[i]], constants.wing_chords[i], 
-              [trim_airfoil(airfoils[i+1],constants.wing_percent_chord_trim),flap_shapes[i+1]], constants.wing_chords[i+1], 
+    wing_skin([ trim_airfoil(airfoils[i], constants.wing_percent_chord_trim), flap_shapes[i] ], 
+              constants.wing_chords[i], 
+              [ trim_airfoil(airfoils[i+1], constants.wing_percent_chord_trim), flap_shapes[i+1] ], 
+              constants.wing_chords[i+1], 
               constants.wing_spans[i], 
               (constants.wing_chords[i]*constants.wing_percent_chord_spar)-(constants.wing_chords[i+1]*constants.wing_percent_chord_spar), 
-              num_ribs=constants.wing_num_ribs[i], tx=-140, ty=constants.wing_vloc[i],    
-              spanlines=constants.wing_spanlines)
+              num_ribs      = constants.wing_num_ribs[i], 
+              tx            = -140, 
+              ty            = constants.wing_vloc[i],    
+              spanlines     = constants.wing_spanlines)
 
 
 #front spars
-#print(a618_spar_extents)
 for i in range(len(constants.wing_chords)-1):
-    wing_spar(constants.wing_chords[i], constants.wing_chords[i+1], constants.wing_spans[i], spar1_extents[i], spar1_extents[i+1], tx=-180, ty=-250+sum(constants.wing_spans[:i]))
-    wing_spar(constants.wing_chords[i], constants.wing_chords[i+1], constants.wing_spans[i], spar2_extents[i], spar2_extents[i+1], tx=-210, ty=-250+sum(constants.wing_spans[:i]))
+    wing_spar(constants.wing_chords[i], 
+              constants.wing_chords[i+1], 
+              constants.wing_spans[i], 
+              spar1_extents[i], 
+              spar1_extents[i+1], 
+              tx   = -180, 
+              ty   = -250+sum(constants.wing_spans[:i]))
+
+    wing_spar(constants.wing_chords[i], 
+              constants.wing_chords[i+1], 
+              constants.wing_spans[i], 
+              spar2_extents[i], 
+              spar2_extents[i+1], 
+              tx   = -210, 
+              ty   = -250+sum(constants.wing_spans[:i]))
 
 
 
@@ -528,21 +555,11 @@ for i in range(len(constants.wing_chords)-1):
 # horizontal tail
 # --------------------------------------------------------------------------------------------------------
 
-tail_percent_leading_edge = 0.0
-tail_percent_spar         = 0.6
-
-htail_chords = [25,18]
-
-a = htail_chords[0]*tail_percent_spar
-b = htail_chords[1]*tail_percent_spar
-spanlines=[[0.0,tail_percent_spar],[]]
+tail_nose_extents   = insert_airfoil_point(tail_airfoil, constants.tail_percent_leading_edge)[0]
+tail_spar_extents  = insert_airfoil_point(tail_airfoil, constants.tail_percent_spar)[0]
 
 
-tail_nose_extents   = insert_airfoil_point(tail_airfoil, tail_percent_leading_edge)[0]
-tail_spar_extents  = insert_airfoil_point(tail_airfoil, tail_percent_spar)[0]
-
-
-ele_root_top, ele_root_bottom   = trim_airfoil_end(tail_airfoil, tail_percent_spar+.05)
+ele_root_top, ele_root_bottom   = trim_airfoil_end(tail_airfoil, constants.tail_percent_spar+.05)
 radius = (ele_root_top[-1][1] - ele_root_bottom[0][1])/2
 
 ele_root_front = [[i[0],i[-1]] for i in make_ellipse({'width':             radius,
@@ -554,11 +571,10 @@ ele_root_front = [[i[0],i[-1]] for i in make_ellipse({'width':             radiu
                                                       numsteps=20, mode=2, flip=2)][1:-1]
 ele_shape = ele_root_top+ele_root_front+ele_root_bottom
 
+wing_skin([trim_airfoil(tail_airfoil,constants.tail_percent_spar+.05),ele_shape], constants.htail_chords[0], 
+          [trim_airfoil(tail_airfoil,constants.tail_percent_spar+.05),ele_shape], constants.htail_chords[1], 
+          62, constants.tail_a-constants.tail_b,tx=220,ty=-100,spanlines=constants.tail_spanlines)
 
-
-wing_skin([trim_airfoil(tail_airfoil,tail_percent_spar+.05),ele_shape], htail_chords[0], 
-          [trim_airfoil(tail_airfoil,tail_percent_spar+.05),ele_shape], htail_chords[1], 
-          62, a-b,tx=220,ty=-100,spanlines=spanlines)
 wing_spar(25,18,62,tail_spar_extents,tail_spar_extents,tx=220,ty=-100)
 
 
@@ -730,7 +746,7 @@ for i in range(len(s.get_bulkheads())):
   
     uppers = s.get_upper_ellipse(i)
     if uppers['height']:
-        upper = make_ellipse(uppers, flip=True, numsteps=401)
+        upper = make_ellipse(uppers, flip=True, numsteps=constants.ellipse_steps)
         upper = [(j[2],j[1]) for j in upper]
         points += upper
         if bulkhead['bulkhead_split']:
@@ -756,7 +772,7 @@ for i in range(len(s.get_bulkheads())):
 
     lowers = s.get_lower_ellipse(i)
     if lowers['height']:
-        lower = make_ellipse(lowers,numsteps=401)
+        lower = make_ellipse(lowers,numsteps=constants.ellipse_steps)
         lower = Polygon([(j[2],j[1]) for j in lower])
         if bulkhead['bulkhead_split']:
             points = lower 

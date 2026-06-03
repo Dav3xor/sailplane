@@ -8,6 +8,7 @@
 
 # sheet metal constants 
 flange_width          = .75
+ellipse_steps         = 401
 
 
 # fuselage bulkheads
@@ -132,17 +133,14 @@ for i in range(6,6+5): # 12 + 17-23                                           # 
 # wing constants
 # --------------------------------------------------------------------------------------------------------
 
-
-
-
-# the wing constants
 wing_percent_chord_spar  = 0.37
 wing_percent_chord_spar2 = 0.70
 wing_percent_chord_trim  = 0.73
 wing_percent_chord_flap  = 0.75
 
 
-
+# TODO: calculate these from the line equation, instead of
+#       copying them off of the plan...
 wing_chords = [ 48,
            382.5-338.8,
            380.3-342.9,
@@ -155,3 +153,18 @@ wing_num_ribs = [4,4,7,6]
 
 wing_spanlines = [[0.0,wing_percent_chord_spar,wing_percent_chord_spar2],[]]
 
+
+
+
+
+# horizontal tail
+# --------------------------------------------------------------------------------------------------------
+
+tail_percent_leading_edge = 0.0
+tail_percent_spar         = 0.6
+
+htail_chords = [25,18]
+
+tail_a = htail_chords[0]*tail_percent_spar
+tail_b = htail_chords[1]*tail_percent_spar
+tail_spanlines=[[0.0,tail_percent_spar],[]]

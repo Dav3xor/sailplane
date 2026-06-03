@@ -27,8 +27,12 @@ def point_along_polyline(line,distance):
         #print("-")
         return None
 
-def points_along_polyline(line,margin,num_points, offset=.75, side='bottom'):
+def points_along_polyline(line,start_margin,num_points, offset=.75, end_margin=None, side='bottom'):
     points = []
+
+    if not end_margin:
+        end_margin = start_margin
+
     def position_point(p):
         p1,p2,p = p
         if side=='bottom':
@@ -42,15 +46,15 @@ def points_along_polyline(line,margin,num_points, offset=.75, side='bottom'):
         points.append(op)
 
     total_length     = polyline_distance(line)
-    available_length = total_length-(margin*2)
+    available_length = total_length-(start_margin+end_margin)
     
     if num_points == 1:
         segment_length = available_length/2
-        p = point_along_polyline(line,margin+segment_length)
+        p = point_along_polyline(line,start_margin+segment_length)
         if p:
             position_point(p)
     else:
-        cur_pos          = margin
+        cur_pos          = start_margin
         segment_length   = available_length/(num_points-1)
         for point in range(num_points):
             p = point_along_polyline(line,cur_pos)
@@ -90,18 +94,19 @@ def polyline_distance(line):
 
 
 
-# TODO: deprecated, remove...
 # well, not really a line, more like holes on a polyline (typically an arc)
-def holes_on_a_line(line, end_margin, min_distance,tx,ty,side='bottom'):
+def holes_on_a_line(line, start_margin, min_distance,tx,ty,side='bottom', end_margin=None):
+    if not end_margin:
+        end_margin = start_margin
     # rivet hole spacing
     rline = line.copy()
     rline.reverse()
     #print("x")
     arc_distance = polyline_distance(line)
     if arc_distance:
-        available_arc = arc_distance-(end_margin*2)
+        available_arc = arc_distance-(start_margin+end_margin)
         num_holes = math.ceil(available_arc/min_distance)
-        points = points_along_polyline(line,end_margin,num_holes,offset=.375,side=side)
+        points = points_along_polyline(line,start_margin,num_holes,offset=.375,side=side, end_margin=end_margin)
         
         for point in points:
             circle = shapely.Point(point).buffer(.125)
